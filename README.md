@@ -1,5 +1,9 @@
 # 🔄 Unmarkd
-A markdown reverser.
+
+> A markdown reverser.
+
+---
+Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python. There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) but I have not found any written in Python (or for Python).
 
 ## Why
 
@@ -15,6 +19,10 @@ You know the drill
 pip install unmarkd
 ```
 
+## Known issues
+
+ - Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))
+
 ## Documentation
 
 Here's an example of basic usage
@@ -25,7 +33,7 @@ print(unmarkd.unmark("<b>I <i>love</i> markdown!</b>"))
 # Output: **I *love* markdown!**
 ```
 
-or something more complex:
+or something more complex (shamelessly taken from [here](https://markdowntohtml.com)):
 
 ```python
 import unmarkd
@@ -69,16 +77,13 @@ and the output:
 
 
      * Unordered lists, and:
-     1. One
-     2. Two
-     3. Three
-     * One
-     * Two
-     * Three
+     0. One
+     1. Two
+     2. Three
      * More
     > Blockquote
 
-    And **bold**, *italics*, and even *italics and later bold*. Even ~~strikethrough~~. [A link](https://markdowntohtml.com) to somewhere.
+    And **bold**, *italics*, and even *italics and later **bold***. Even ~~strikethrough~~. [A link](https://markdowntohtml.com) to somewhere.
     And code highlighting:
 
     ```js
@@ -93,8 +98,25 @@ and the output:
     Or inline code like `var foo = 'bar';`.
     Or an image of bears
     ![bears](http://placebear.com/200/200)
-    The end...
+    The end ...
 
-## Extending
+### Extending
 
-TK.
+#### Brief Overview
+
+Most functionality should be covered by the `BasicUnmarker` class defined in `unmarkd.unmarkers`.
+
+If you need to reverse markdown from StackExchange (as in the case for my other project), you may use the `StackOverflowUnmarker` (or it's alias, `StackExchangeUnmarker`), which is also defined in `unmarkd.unmarkers`.
+
+#### Customizing
+
+If the above two classes do not suit your needs, you can subclass the `unmarkd.unmarkers.BaseUnmarker` abstract class.
+
+Currently, you *must* define the following methods:
+
+ - `detect_language` (parameters: **1**)
+    - When a fenced code block is approached, this function is called with a parameter of type `bs4.BeautifulSoup` passed to it; this is the element the code block was detected from (i.e. `pre`).
+    - This function is responsible for detecting the programming language (or returning `''` if none was detected) of the code block.
+
+
+Currently, there are no methods you can *optionally* override.
