@@ -120,6 +120,9 @@ class StackOverflowUnmarker(BaseUnmarker):
         return output
 
 
+StackExchangeUnmarker = StackOverflowUnmarker
+
+
 class BasicUnmarker(BaseUnmarker):
     """The basic, generic unmarker"""
 
