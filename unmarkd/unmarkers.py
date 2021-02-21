@@ -9,67 +9,72 @@ import bs4
 
 
 class BaseUnmarker(abc.ABC):
+    def __unordered_list(self, element: bs4.BeautifulSoup) -> str:
+        output = ""
+        for item in element:
+            if item.name != "li":  # Or else it'd be invalid
+                continue
+            assert item.name == "li"
+            output += f"\n * {self.unmark(item)}"
+        return output
+
+    def __ordered_list(self, element: bs4.BeautifulSoup) -> str:
+        output = ""
+        for index, item in enumerate((e for e in element if str(e).strip())):
+            if item.name != "li":  # Or else it'd be invalid
+                continue
+            assert item.name == "li"
+            output += f"\n {index}. {self.unmark(item)}"
+        return output
+
+    def __parse(self, child: bs4.BeautifulSoup) -> str:
+        # TODO: Modularize
+        def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
+            return around_with + self.unmark(element) + around_with
+
+        if type(child) in (str, bs4.NavigableString):
+            return child
+        elif child.name == "div":  # Other text
+            for item in child.children:
+                return self.unmark(item)
+        elif child.name == "p":  # Normal text
+            return self.unmark(child)
+        elif child.name == "del":
+            return wrap(child, around_with="~~")
+        elif child.name == "pre":  # Code blocks
+            return f"\n```{self.detect_language(child)}\n{child.code.get_text()}\n```\n"
+        elif child.name == "code":  # Inline Code
+            return f"`{self.unmark(child)}`"
+        elif child.name == "hr":  # One of those line thingies
+            return "\n---\n"
+        elif child.name.startswith("h"):  # Headers
+            return "\n" + "#" * int(child.name[1:]) + " " + self.unmark(child) + "\n"
+        elif child.name in {"b", "strong"}:  # Bold
+            return wrap(child, around_with="**")
+        elif child.name in {"i", "em"}:  # Italics
+            return wrap(child, around_with="*")
+        elif child.name == "a":  # Link
+            return f"[{self.unmark(child)}]({child['href']})"
+        elif child.name == "img":  # Images
+            return f"![{child.get('alt')}]({child['src']})"
+        elif child.name == "ul":  # Bullet list
+            return self.__unordered_list(child)
+        elif child.name == "ol":  # Number list
+            return self.__ordered_list(child)
+        elif child.name == "br":
+            return "\n\n"
+        elif child.name == "blockquote":
+            return "> " + self.unmark(child.p) + "\n"
+        else:  # Other HTML tags that weren't mentioned here
+            return str(child)
+
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
         if type(html) is str:
             html = bs4.BeautifulSoup(html, features="html.parser")
-        # TODO: Modularize
-        if type(html) in (str, bs4.NavigableString):
-            return html
         output = ""
-
-        def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
-            output = ""
-            output += around_with
-            for item in element.children:
-                assert item is not None, "This should never happen"
-                output += self.unmark(item)
-            output += around_with
-            return output
-
         for child in html.children:
-            if isinstance(child, bs4.NavigableString):  # Strings
-                output += child
-            elif child.name == "div":  # Other text
-                for item in child.children:
-                    output += self.unmark(item)
-            elif child.name == "p":  # Normal text
-                output += self.unmark(child)
-            elif child.name == "del":
-                output += wrap(child, around_with="~~")
-            elif child.name == "pre":  # Code blocks
-                output += f"\n```{self.detect_language(html)}\n"
-                output += html.code.get_text()
-                output += "\n```\n"
-            elif child.name == "code":  # Inline Code
-                output += f"`{self.unmark(child)}`"
-            elif child.name == "hr":  # One of those line thingies
-                output += "\n---\n"
-            elif child.name.startswith("h"):  # Headers
-                output += (
-                    "\n" + "#" * int(child.name[1:]) + " " + self.unmark(child) + "\n"
-                )
-            elif child.name in {"b", "strong"}:  # Bold
-                output += wrap(child, around_with="**")
-            elif child.name in {"i", "em"}:  # Italics
-                output += wrap(child, around_with="*")
-            elif child.name == "a":  # Link
-                output += f"[{self.unmark(child)}]({child['href']})"
-            elif child.name == "img":  # Images
-                output += f"![{child.get('alt')}]({child['src']})"
-            elif child.name == "ul":  # Bullet list
-                for item in child("li"):
-                    output += f"\n * {self.unmark(item)}"
-            elif child.name == "ol":  # Number list
-                for index, item in enumerate(child("li")):
-                    output += f"\n {index + 1}. {self.unmark(item)}"
-            elif child.name == "br":
-                output += "\n\n"
-            elif child.name == "blockquote":
-                output += "> " + self.unmark(child.p) + "\n"
-
-            else:  # Other HTML tags that weren't mentioned here
-                output += str(child)
+            output += self.__parse(child)
 
         return output.strip()
 
