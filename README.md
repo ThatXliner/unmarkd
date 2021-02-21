@@ -1,4 +1,5 @@
 # 🔄 Unmarkd
+[![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd)
 
 > A markdown reverser.
 
