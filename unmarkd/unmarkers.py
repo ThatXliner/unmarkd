@@ -9,6 +9,24 @@ import bs4
 
 
 class BaseUnmarker(abc.ABC):
+    def __unordered_list(self, element: bs4.BeautifulSoup) -> str:
+        output = ""
+        for item in element:
+            if item.name != "li":  # Or else it'd be invalid
+                continue
+            assert item.name == "li"
+            output += f"\n * {self.unmark(item)}"
+        return output
+
+    def __ordered_list(self, element: bs4.BeautifulSoup) -> str:
+        output = ""
+        for index, item in enumerate((e for e in element if str(e).strip())):
+            if item.name != "li":  # Or else it'd be invalid
+                continue
+            assert item.name == "li"
+            output += f"\n {index}. {self.unmark(item)}"
+        return output
+
     def __parse(self, child: bs4.BeautifulSoup) -> str:
         # TODO: Modularize
         def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
@@ -40,23 +58,15 @@ class BaseUnmarker(abc.ABC):
         elif child.name == "img":  # Images
             return f"![{child.get('alt')}]({child['src']})"
         elif child.name == "ul":  # Bullet list
-            output = ""
-            for item in child("li"):
-                output += f"\n * {self.unmark(item)}"
-            return output
+            return self.__unordered_list(child)
         elif child.name == "ol":  # Number list
-            output = ""
-            for index, item in enumerate(child("li")):
-                output += f"\n {index + 1}. {self.unmark(item)}"
-            return output
+            return self.__ordered_list(child)
         elif child.name == "br":
             return "\n\n"
         elif child.name == "blockquote":
             return "> " + self.unmark(child.p) + "\n"
-
         else:  # Other HTML tags that weren't mentioned here
             return str(child)
-        return output
 
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
