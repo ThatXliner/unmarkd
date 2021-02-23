@@ -4,13 +4,13 @@
 > A markdown reverser.
 
 ---
-Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python. There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) but I have not found any written in Python (or for Python).
+Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python.
 
 ## Why
 
-This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependancy.
+This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependancy. In order to create a better API, I needed a way to reverse HTML. So I created this.
 
-In order to create a better API, I needed a way to reverse HTML. So I created this.
+There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) but I have not found any written in Python (or for Python).
 
 ## Installation
 
