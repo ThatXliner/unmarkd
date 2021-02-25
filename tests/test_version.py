@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import toml
+
 from unmarkd import __version__
 
 project_dir = Path(__file__).parent.parent
