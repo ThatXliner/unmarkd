@@ -11,6 +11,8 @@ import unmarkd
 @example("0\n\n0")
 @example("```\n```")
 @example("```")
+@example(R"*\**")
+@example(R"`\``")
 def test_roundtrip_commonmark_unmark(text):
     assume(text.strip() == text)
     value0 = commonmark.main.commonmark(text=text)
