@@ -1,8 +1,7 @@
 import commonmark.main
-from hypothesis import assume, given, example
-from hypothesis import strategies as st
-
 import unmarkd
+from hypothesis import assume, example, given
+from hypothesis import strategies as st
 
 
 @given(text=st.text())

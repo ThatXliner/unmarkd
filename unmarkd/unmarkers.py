@@ -92,9 +92,8 @@ class BaseUnmarker(abc.ABC):
 
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
-        if type(html) is str:
+        if not type(html) == bs4.BeautifulSoup:
             html = bs4.BeautifulSoup(html, features="html.parser")
-
         return self.__parse(html).strip()
 
     @abc.abstractmethod  # Language detecting compatibilities may vary
