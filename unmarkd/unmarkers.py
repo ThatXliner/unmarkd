@@ -9,26 +9,20 @@ import bs4
 
 
 class BaseUnmarker(abc.ABC):
-    def __unordered_list(self, element: bs4.BeautifulSoup) -> str:
-        output = ""
-        for item in element:
-            if item.name != "li":  # Or else it'd be invalid
-                continue
-            assert item.name == "li"
-            output += f"\n * {self.unmark(item)}"
-        return output
 
     ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\"}
     UNORDERED_FORMAT = "\n * {next_item}"
     ORDERED_FORMAT = "\n {number_index}. {next_item}"
 
-    def __ordered_list(self, element: bs4.BeautifulSoup) -> str:
+    def __render_list(self, element: bs4.BeautifulSoup, item_format: str) -> str:
         output = ""
         for index, item in enumerate((e for e in element if str(e).strip())):
             if item.name != "li":  # Or else it'd be invalid
                 continue
             assert item.name == "li"
-            output += f"\n {index}. {self.unmark(item)}"
+            output += item_format.format(
+                next_item=self.__parse(item), number_index=index + 1
+            )
         return output
 
     def escape(self, string: str) -> str:
@@ -45,6 +39,8 @@ class BaseUnmarker(abc.ABC):
             return around_with + self.__parse(element) + around_with
 
         output = ""
+        if html is None:
+            return ""
         for child in html.children:
             if type(child) in (str, bs4.NavigableString):
                 if child == "\n":
@@ -79,13 +75,13 @@ class BaseUnmarker(abc.ABC):
             elif child.name == "img":  # Images
                 output += f"![{child.get('alt')}]({child['src']})"
             elif child.name == "ul":  # Bullet list
-                output += self.__unordered_list(child)
+                output += self.__render_list(child, self.UNORDERED_FORMAT)
             elif child.name == "ol":  # Number list
-                output += self.__ordered_list(child)
+                output += self.__render_list(child, self.ORDERED_FORMAT)
             elif child.name == "br":
                 output += "\n\n"
             elif child.name == "blockquote":
-                output += "> " + self.__parse(child.p) + "\n"
+                output += "> " + self.__parse(child.p)  # + "\n"
             else:  # Other HTML tags that weren't mentioned here
                 output += str(child)
         return output
@@ -119,7 +115,7 @@ class StackOverflowUnmarker(BaseUnmarker):
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
         classes = html.get("class") or html.code.get("class")
         if classes is None:
-            return None
+            return ""
         classes = classes[:]  # Copy it
         for item in (
             "default",

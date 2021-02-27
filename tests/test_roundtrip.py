@@ -12,6 +12,9 @@ from hypothesis import strategies as st
 @example("```")
 @example(R"*\**")
 @example(R"`\``")
+@example("-")
+@example(">")
+@example("<")
 def test_roundtrip_commonmark_unmark(text):
     assume(text.strip() == text)
     value0 = commonmark.main.commonmark(text=text)
