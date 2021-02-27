@@ -1,8 +1,7 @@
 import commonmark.main
+import unmarkd
 from hypothesis import assume, example, given
 from hypothesis import strategies as st
-
-import unmarkd
 
 
 @given(text=st.text())
@@ -10,8 +9,10 @@ import unmarkd
 @example("` `")
 @example("0\n\n0")
 @example("```\n```")
+@example("0.")
 @example("```")
 @example(R"*\**")
+@example(R"**\***")
 @example(R"`\``")
 @example("-")
 @example(">")
