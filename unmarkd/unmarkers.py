@@ -3,7 +3,7 @@
 """Generate markdown from messy HTML"""
 
 import abc
-from typing import Optional, Union
+from typing import Union
 
 import bs4
 
@@ -17,6 +17,7 @@ class BaseUnmarker(abc.ABC):
             assert item.name == "li"
             output += f"\n * {self.unmark(item)}"
         return output
+
     ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\"}
     UNORDERED_FORMAT = "\n * {next_item}"
     ORDERED_FORMAT = "\n {number_index}. {next_item}"
@@ -29,6 +30,7 @@ class BaseUnmarker(abc.ABC):
             assert item.name == "li"
             output += f"\n {index}. {self.unmark(item)}"
         return output
+
     def escape(self, string: str) -> str:
         """Escape a string to be markdown-safe"""
         return "".join(map(self.__escape_character, string))
