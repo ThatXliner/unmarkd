@@ -14,15 +14,22 @@ class BaseUnmarker(abc.ABC):
     UNORDERED_FORMAT = "\n * {next_item}"
     ORDERED_FORMAT = "\n {number_index}. {next_item}"
 
-    def __render_list(self, element: bs4.BeautifulSoup, item_format: str) -> str:
+    def __render_list(
+        self,
+        element: bs4.BeautifulSoup,
+        item_format: str,
+        counter_initial_value: int = 1,
+    ) -> str:
         output = ""
-        for index, item in enumerate((e for e in element if str(e).strip())):
+        counter = counter_initial_value
+        for item in (e for e in element if str(e).strip()):
             if item.name != "li":  # Or else it'd be invalid
                 continue
             assert item.name == "li"
             output += item_format.format(
-                next_item=self.__parse(item), number_index=index + 1
+                next_item=self.__parse(item), number_index=counter
             )
+            counter += 1
         return output
 
     def escape(self, string: str) -> str:
@@ -77,7 +84,12 @@ class BaseUnmarker(abc.ABC):
             elif child.name == "ul":  # Bullet list
                 output += self.__render_list(child, self.UNORDERED_FORMAT)
             elif child.name == "ol":  # Number list
-                output += self.__render_list(child, self.ORDERED_FORMAT)
+
+                output += self.__render_list(
+                    child,
+                    self.ORDERED_FORMAT,
+                    counter_initial_value=int(child.get("start", 1)),
+                )
             elif child.name == "br":
                 output += "\n\n"
             elif child.name == "blockquote":
