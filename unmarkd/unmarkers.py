@@ -17,6 +17,9 @@ class BaseUnmarker(abc.ABC):
             assert item.name == "li"
             output += f"\n * {self.unmark(item)}"
         return output
+    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\"}
+    UNORDERED_FORMAT = "\n * {next_item}"
+    ORDERED_FORMAT = "\n {number_index}. {next_item}"
 
     def __ordered_list(self, element: bs4.BeautifulSoup) -> str:
         output = ""
@@ -26,6 +29,13 @@ class BaseUnmarker(abc.ABC):
             assert item.name == "li"
             output += f"\n {index}. {self.unmark(item)}"
         return output
+    def escape(self, string: str) -> str:
+        """Escape a string to be markdown-safe"""
+        return "".join(map(self.__escape_character, string))
+
+    def __escape_character(self, char: str) -> str:
+        assert len(char) == 1
+        return self.ESCAPING_DICT.get(char, char)
 
     def __parse(self, html: bs4.BeautifulSoup) -> str:
         # TODO: Modularize
@@ -38,7 +48,7 @@ class BaseUnmarker(abc.ABC):
                 if child == "\n":
                     output += "\n\n"
                 else:
-                    output += child
+                    output += self.escape(child)
             elif child.name == "div":  # Other text
                 for item in child.children:
                     output += self.__parse(item)
