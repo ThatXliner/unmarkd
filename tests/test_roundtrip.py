@@ -54,4 +54,5 @@ class TestExampleCases:
     def test_example_18(self) -> None: helper("![img](https://github.com)")
     def test_example_19(self) -> None: helper("""# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6""")
     def test_example_20(self) -> None: helper("~~Nothing.~~")
+    def test_example_21(self) -> None: helper("```0")
 # fmt: on

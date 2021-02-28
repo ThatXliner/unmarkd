@@ -188,4 +188,6 @@ class BasicUnmarker(BaseUnmarker):
         lang = classes[-1]
         if lang.startswith("lang-"):
             lang = lang[5:]
+        elif lang.startswith("language-"):
+            lang = lang[9:]
         return lang
