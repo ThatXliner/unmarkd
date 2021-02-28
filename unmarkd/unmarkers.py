@@ -40,7 +40,7 @@ class BaseUnmarker(abc.ABC):
         assert len(char) == 1
         return self.ESCAPING_DICT.get(char, char)
 
-    def __parse(self, html: bs4.BeautifulSoup) -> str:
+    def __parse(self, html: bs4.BeautifulSoup, escape: bool = True) -> str:
         # TODO: Modularize
         def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
             return around_with + self.__parse(element) + around_with
@@ -53,7 +53,7 @@ class BaseUnmarker(abc.ABC):
                 if child == "\n":
                     output += "\n\n"
                 else:
-                    output += self.escape(child)
+                    output += self.escape(child) if escape else child
             elif child.name == "div":  # Other text
                 for item in child.children:
                     output += self.__parse(item)
@@ -66,7 +66,7 @@ class BaseUnmarker(abc.ABC):
                     f"\n```{self.detect_language(child)}\n{child.code.get_text()}```\n"
                 )
             elif child.name == "code":  # Inline Code
-                output += f"`{self.__parse(child)}`"
+                output += f"`{self.__parse(child, escape=False)}`"
             elif child.name == "hr":  # One of those line thingies
                 output += "\n---\n"
             elif child.name.startswith("h"):  # Headers
