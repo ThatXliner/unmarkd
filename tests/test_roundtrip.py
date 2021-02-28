@@ -1,17 +1,21 @@
-import commonmark.main
-import unmarkd
+import markdown_it
 from hypothesis import assume, example, given
 from hypothesis import strategies as st
 
+import unmarkd
+
+
 def helper(text: str) -> None:
-    value0        = commonmark.main.commonmark(text)
-    unmarked      = unmarkd.unmark(html=value0)
-    value1        = commonmark.main.commonmark(unmarked)
+    md = markdown_it.MarkdownIt()
+    value0 = md.render(text)
+    unmarked = unmarkd.unmark(html=value0)
+    value1 = md.render(unmarked)
     assert value0 == value1, (value0, value1, unmarked)
+
 
 @given(text=st.text())
 @example(
-"""<ul>
+    """<ul>
 <li>tb
 <ol>
 <li>i1</li>
@@ -26,9 +30,10 @@ def test_roundtrip_commonmark_unmark(text):
     assume(text.strip() == text)
     helper(text)
 
+
 class TestExampleCases:
-    def test_example_1(self):  helper('')
-    def test_example_2(self):  helper('` `')
+    def test_example_1(self):  helper("")
+    def test_example_2(self):  helper("` `")
     def test_example_3(self):  helper(text="0\n\n0")
     def test_example_4(self):  helper(text="```\n```")
     def test_example_5(self):  helper(text="0.")
@@ -39,3 +44,4 @@ class TestExampleCases:
     def test_example_10(self): helper(text=R"-")
     def test_example_11(self): helper(text=R">")
     def test_example_12(self): helper(text=R"<")
+    def test_example_13(self): helper("*foo `bar* baz`")
