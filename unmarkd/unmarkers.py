@@ -10,7 +10,7 @@ import bs4
 
 class BaseUnmarker(abc.ABC):
 
-    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\"}
+    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\", "~": R"\~"}
     UNORDERED_FORMAT = "\n - {next_item}"
     ORDERED_FORMAT = "\n {number_index}. {next_item}"
 
@@ -76,7 +76,15 @@ class BaseUnmarker(abc.ABC):
             elif child.name in {"i", "em"}:  # Italics
                 output += wrap(child, around_with="*")
             elif child.name == "a":  # Link
-                output += f"[{self.__parse(child)}]({child['href']})"
+                output += (
+                    f"[{self.__parse(child)}]({child['href']}"
+                    + (
+                        " " + repr(self.escape(child["title"]))
+                        if child.get("title")
+                        else ""
+                    )
+                    + ")"
+                )
             elif child.name == "img":  # Images
                 try:
                     tag = child.contents[0]
@@ -85,7 +93,12 @@ class BaseUnmarker(abc.ABC):
                 try:
                     tag_text = child.contents[-1]
                 except IndexError:
-                    tag_text = child.next_sibling.extract().strip()
+                    next_sib = tag.next_sibling
+                    tag_text = (
+                        next_sib.extract().strip()
+                        if next_sib
+                        else tag.get_text().strip()
+                    )
                 output += f"![{tag.get('alt') or tag_text}]({tag['src']})"
             elif child.name == "ul":  # Bullet list
                 output += self.__render_list(child, self.UNORDERED_FORMAT)
