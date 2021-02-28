@@ -11,7 +11,7 @@ import bs4
 class BaseUnmarker(abc.ABC):
 
     ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\"}
-    UNORDERED_FORMAT = "\n * {next_item}"
+    UNORDERED_FORMAT = "\n - {next_item}"
     ORDERED_FORMAT = "\n {number_index}. {next_item}"
 
     def __render_list(
@@ -40,10 +40,10 @@ class BaseUnmarker(abc.ABC):
         assert len(char) == 1
         return self.ESCAPING_DICT.get(char, char)
 
-    def __parse(self, html: bs4.BeautifulSoup, escape: bool = True) -> str:
+    def __parse(self, html: bs4.BeautifulSoup, escape: bool = False) -> str:
         # TODO: Modularize
         def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
-            return around_with + self.__parse(element) + around_with
+            return around_with + self.__parse(element, escape=True) + around_with
 
         output = ""
         if html is None:
@@ -58,7 +58,7 @@ class BaseUnmarker(abc.ABC):
                 for item in child.children:
                     output += self.__parse(item)
             elif child.name == "p":  # Normal text
-                output += self.__parse(child)
+                output += self.__parse(child, escape=True)
             elif child.name == "del":
                 output += wrap(child, around_with="~~")
             elif child.name == "pre":  # Code blocks
@@ -70,9 +70,7 @@ class BaseUnmarker(abc.ABC):
             elif child.name == "hr":  # One of those line thingies
                 output += "\n---\n"
             elif child.name.startswith("h"):  # Headers
-                output += (
-                    "\n" + "#" * int(child.name[1:]) + " " + self.__parse(child) + "\n"
-                )
+                output += "#" * int(child.name[1:]) + " " + self.__parse(child) + "\n"
             elif child.name in {"b", "strong"}:  # Bold
                 output += wrap(child, around_with="**")
             elif child.name in {"i", "em"}:  # Italics
@@ -80,11 +78,18 @@ class BaseUnmarker(abc.ABC):
             elif child.name == "a":  # Link
                 output += f"[{self.__parse(child)}]({child['href']})"
             elif child.name == "img":  # Images
-                output += f"![{child.get('alt')}]({child['src']})"
+                try:
+                    tag = child.contents[0]
+                except IndexError:
+                    tag = child
+                try:
+                    tag_text = child.contents[-1]
+                except IndexError:
+                    tag_text = child.next_sibling.extract().strip()
+                output += f"![{tag.get('alt') or tag_text}]({tag['src']})"
             elif child.name == "ul":  # Bullet list
                 output += self.__render_list(child, self.UNORDERED_FORMAT)
             elif child.name == "ol":  # Number list
-
                 output += self.__render_list(
                     child,
                     self.ORDERED_FORMAT,
@@ -94,10 +99,10 @@ class BaseUnmarker(abc.ABC):
                 output += "\n\n"
             elif child.name == "blockquote":
                 output += (
-                    ">"
-                    + (">" if child.blockquote is not None else "")
-                    + self.__parse(child.p)
-                )  # + "\n"
+                    (">" * (len(child("blockquote")) or 1))
+                    + self.__parse(child).strip()
+                    + "\n"
+                )
             else:  # Other HTML tags that weren't mentioned here
                 output += str(child)
         return output
@@ -105,7 +110,7 @@ class BaseUnmarker(abc.ABC):
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
         if not type(html) == bs4.BeautifulSoup:
-            html = bs4.BeautifulSoup(html, features="html.parser")
+            html = bs4.BeautifulSoup(html, "html.parser")
         return self.__parse(html).strip()
 
     @abc.abstractmethod  # Language detecting compatibilities may vary

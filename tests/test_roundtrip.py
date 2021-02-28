@@ -1,7 +1,8 @@
 import markdown_it
-import unmarkd
 from hypothesis import assume, example, given
 from hypothesis import strategies as st
+
+import unmarkd
 
 
 def helper(text: str) -> None:
