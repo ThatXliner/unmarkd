@@ -14,18 +14,18 @@ def helper(text: str) -> None:
 
 
 @given(text=st.text())
-@example(
-    """<ul>
-<li>tb
-<ol>
-<li>i1</li>
-<li>i2</li>
-<li>i3</li>
-</ol>
-</li>
-<li>bb</li>
-</ul>"""
-)
+#@example(
+#    """<ul>
+#<li>tb
+#<ol>
+#<li>i1</li>
+#<li>i2</li>
+#<li>i3</li>
+#</ol>
+#</li>
+#<li>bb</li>
+#</ul>"""
+#)
 def test_roundtrip_commonmark_unmark(text):
     assume(text.strip() == text)
     helper(text)
