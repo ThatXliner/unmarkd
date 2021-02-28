@@ -93,7 +93,11 @@ class BaseUnmarker(abc.ABC):
             elif child.name == "br":
                 output += "\n\n"
             elif child.name == "blockquote":
-                output += "> " + self.__parse(child.p)  # + "\n"
+                output += (
+                    ">"
+                    + (">" if child.blockquote is not None else "")
+                    + self.__parse(child.p)
+                )  # + "\n"
             else:  # Other HTML tags that weren't mentioned here
                 output += str(child)
         return output
