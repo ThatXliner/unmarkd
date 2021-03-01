@@ -22,7 +22,7 @@ pip install unmarkd
 
 ## Known issues
 
- - Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))
+ - ~~Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))~~ Fixed in [#11](https://github.com/ThatXliner/unmarkd/pull/11)
 
 ## Documentation
 
