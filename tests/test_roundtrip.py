@@ -14,18 +14,6 @@ def helper(text: str) -> None:
 
 
 @given(text=st.text())
-# @example(
-#    """<ul>
-# <li>tb
-# <ol>
-# <li>i1</li>
-# <li>i2</li>
-# <li>i3</li>
-# </ol>
-# </li>
-# <li>bb</li>
-# </ul>"""
-# )
 def test_roundtrip_commonmark_unmark(text):
     assume(text.strip() == text)
     helper(text)
@@ -55,4 +43,5 @@ class TestExampleCases:
     def test_example_19(self) -> None: helper("""# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6""")
     def test_example_20(self) -> None: helper("~~Nothing.~~")
     def test_example_21(self) -> None: helper("```0")
+    def test_example_22(self) -> None: helper("- Unordered lists, and:\n 1. One\n 2. Two\n 3. Three\n- More")
 # fmt: on
