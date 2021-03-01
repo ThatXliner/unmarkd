@@ -1,5 +1,5 @@
 # 🔄 Unmarkd
-[![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd)
+[![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![CI](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml) [![PyPI - Downloads](https://img.shields.io/pypi/dm/unmarkd)](https://pypi.org/project/unmarkd/)
 
 > A markdown reverser.
 
