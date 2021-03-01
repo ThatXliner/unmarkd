@@ -11,8 +11,8 @@ import bs4
 class BaseUnmarker(abc.ABC):
 
     ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\", "~": R"\~"}
-    UNORDERED_FORMAT = "\n - {next_item}"
-    ORDERED_FORMAT = "\n {number_index}. {next_item}"
+    UNORDERED_FORMAT = "\n- {next_item}\n "
+    ORDERED_FORMAT = "\n {number_index}. {next_item}\n "
 
     def __render_list(
         self,
@@ -28,7 +28,7 @@ class BaseUnmarker(abc.ABC):
             assert item.name == "li"
             output += item_format.format(
                 next_item=self.__parse(item), number_index=counter
-            )
+            ).rstrip()
             counter += 1
         return output
 
@@ -55,8 +55,7 @@ class BaseUnmarker(abc.ABC):
                 else:
                     output += self.escape(child) if escape else child
             elif child.name == "div":  # Other text
-                for item in child.children:
-                    output += self.__parse(item)
+                output += self.__parse(child)
             elif child.name == "p":  # Normal text
                 output += self.__parse(child, escape=True)
             elif child.name == "del":
