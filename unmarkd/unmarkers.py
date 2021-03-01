@@ -7,6 +7,11 @@ from typing import Union
 
 import bs4
 
+try:
+    from mdformat import format as format_md
+except ModuleNotFoundError:
+    format_md = None
+
 
 class BaseUnmarker(abc.ABC):
 
@@ -123,7 +128,10 @@ class BaseUnmarker(abc.ABC):
         """The main reverser method. Use this to convert HTML into markdown"""
         if not type(html) == bs4.BeautifulSoup:
             html = bs4.BeautifulSoup(html, "html.parser")
-        return self.__parse(html).strip()
+        output = self.__parse(html)
+        if format_md is not None:
+            return format_md(output)
+        return output.strip()
 
     @abc.abstractmethod  # Language detecting compatibilities may vary
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
