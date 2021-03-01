@@ -8,7 +8,7 @@ from typing import Union
 import bs4
 
 try:
-    from mdformat import format as format_md
+    from mdformat import text as format_md
 except ModuleNotFoundError:
     format_md = None
 
