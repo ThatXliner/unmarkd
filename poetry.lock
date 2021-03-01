@@ -449,10 +449,14 @@ python-versions = ">=3.6"
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
+[extras]
+all = ["mdformat"]
+formatted = ["mdformat"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "3fa3857919764a006d880d9cc24884ae7af98b6b86ee64431952ac5b945ea2e8"
+content-hash = "587ad160eefb8ad30c10dd37b11b6707147edff459d49c54384020fcb6877895"
 
 [metadata.files]
 appdirs = [
