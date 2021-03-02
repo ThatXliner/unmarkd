@@ -9,9 +9,16 @@ repository = "https://github.com/ThatXliner/unmarkd/tree/master"
 documentation = "https://github.com/ThatXliner/unmarkd/tree/master#documentation"
 classifiers = ["Development Status :: 5 - Production/Stable", "Natural Language :: English", "Operating System :: OS Independent", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: Implementation :: CPython", "Typing :: Typed", "Topic :: Text Processing :: Markup :: Markdown", "Topic :: Text Processing :: Markup :: HTML", "Topic :: Software Development :: Libraries :: Python Modules"]
 include = ["LICENSE.md", "README.md"]
+
 [tool.poetry.dependencies]
 python = "^3.6"
-beautifulsoup4 = "^4.9.3"
+beautifulsoup4 = "^4.9.1"
+lxml = {version = "^4.6.2", optional = true}
+cchardet = {version = "^2.1.7", optional = true}
+
+[tool.poetry.extras]
+speedups = ["lxml", "cchardet"]
+all = ["lxml", "cchardet"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
