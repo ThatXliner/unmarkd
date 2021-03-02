@@ -4,18 +4,18 @@ from hypothesis import strategies as st
 
 import unmarkd
 
+md = markdown_it.MarkdownIt()
+
 
 def helper(text: str) -> None:
-    md = markdown_it.MarkdownIt()
     value0 = md.render(text)
     unmarked = unmarkd.unmark(html=value0)
     value1 = md.render(unmarked)
     assert value0 == value1, (value0, value1, unmarked)
 
 
-@given(text=st.text())
+@given(text=st.text(st.characters(blacklist_categories=("Cc", "Cf", "Cs", "Co", "Cn"))))
 def test_roundtrip_commonmark_unmark(text):
-    assume(text.strip() == text)
     helper(text)
 
 
