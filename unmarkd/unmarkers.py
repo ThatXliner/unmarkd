@@ -10,7 +10,7 @@ import bs4
 
 class BaseUnmarker(abc.ABC):
 
-    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\", "~": R"\~"}
+    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\", "~": R"\~", "_": R"\_"}
     UNORDERED_FORMAT = "\n- {next_item}\n "
     ORDERED_FORMAT = "\n {number_index}. {next_item}\n "
 
