@@ -10,7 +10,7 @@ Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-pow
 
 This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependancy. In order to create a better API, I needed a way to reverse HTML. So I created this.
 
-There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) but I have not found any written in Python (or for Python).
+There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) ~~but I have not found any written in Python (or for Python)~~ while I did find [Tomd](https://github.com/gaojiuli/tomd), unmarkd still is better. See [comparison](#comparison).
 
 ## Installation
 
@@ -24,6 +24,45 @@ pip install unmarkd
 
  - ~~Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))~~ Fixed in [#11](https://github.com/ThatXliner/unmarkd/pull/11)
 
+## Comparison
+
+**TL;DR: Use Tomd for average HTML reversing. Use Unmarkd if you need to be able to reverse everything you throw it at.**
+
+<details>
+
+
+<summary>Click to expand</summary>
+
+### Speed
+
+**TL;DR: Unmarkd < Tomd**
+
+For most examples, Unmarkd is *barely* faster:
+
+![Benchmark](./assets/benchmark_flat.png)
+
+For recursive examples, Tomd is *two times* faster:
+
+![Benchmark](./assets/benchmark_nest.png)
+
+Wait, **does that mean Unmarkd is slow**? Well, yes. But, as with all Python programs, we sacrifice speed for flexibility.
+
+### Powerfullness
+
+**TL;DR: Unmarkd > Tomd**
+
+Tomd admits that **it cannot currently handle nested lists** while **Unmarkd can**!
+
+Let's take the same HTML document from the nested benchmark and actually see the results:
+
+![Actual results](./assets/tomd_cant_handle.png)
+
+Tomd generates markdown **that is not the same as the original**. But **Unmarkd does** (if it doesn't then it's a bug)! Meaning, **Unmarkd is more reliable than Tomd**.
+
+Meaning, Unmarkd should handle almost everything you throw at it! 💪
+
+
+</details>
 ## Documentation
 
 Here's an example of basic usage
