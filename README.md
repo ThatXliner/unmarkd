@@ -63,6 +63,7 @@ Meaning, Unmarkd should handle almost everything you throw at it! 💪
 
 
 </details>
+
 ## Documentation
 
 Here's an example of basic usage
