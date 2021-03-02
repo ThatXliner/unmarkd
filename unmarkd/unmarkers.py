@@ -126,8 +126,6 @@ class BaseUnmarker(abc.ABC):
                 html,
                 builder=bs4.builder_registry.lookup(*["lxml"])
                 or bs4.builder_registry.lookup(*["html.parser"]),
-                on_duplicate_attribute="ignore",
-                # NOTE: If removed, we have 4.9.0 compatibility
             )
 
         if html.html is not None:  # Testing if not using "html.parser"

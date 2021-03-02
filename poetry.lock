@@ -465,7 +465,7 @@ speedups = ["lxml", "cchardet"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "5cf513df3874521e6cc22ac9410b160216550a5854eb66c60d2247616ed845ea"
+content-hash = "df05353c092f8027d457c50c92a8e36e760e74ce709c2dc54b60f81ef837fb15"
 
 [metadata.files]
 appdirs = [
