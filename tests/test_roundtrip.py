@@ -1,4 +1,5 @@
 import unicodedata
+
 import markdown_it
 from hypothesis import assume, example, given
 from hypothesis import strategies as st
