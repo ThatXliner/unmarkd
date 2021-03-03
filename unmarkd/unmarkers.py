@@ -3,23 +3,39 @@
 """Generate markdown from messy HTML"""
 
 import abc
-from typing import Union
+from typing import Union, Dict, Set
 
 import bs4
+import html as lib_html
 
 
 class BaseUnmarker(abc.ABC):
+    ESCAPABLES: Set[str] = {
+        "*",
+        "`",
+        "\\",
+        "~",
+        "_",
+        "[",
+        "]",
+        "(",
+        ")",
+    }
+    TAG_ALIASES: Dict[str, str] = {}
+    DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b"}
+    UNORDERED_FORMAT: str = "\n- {next_item}\n "
+    ORDERED_FORMAT: str = "\n {number_index}. {next_item}\n "
 
-    ESCAPING_DICT = {"*": R"\*", "`": R"\`", "\\": "\\\\", "~": R"\~", "_": R"\_"}
-    UNORDERED_FORMAT = "\n- {next_item}\n "
-    ORDERED_FORMAT = "\n {number_index}. {next_item}\n "
-
-    def __render_list(
+    def _render_list(
         self,
         element: bs4.BeautifulSoup,
         item_format: str,
         counter_initial_value: int = 1,
     ) -> str:
+        """Render a list of items according to a format.
+
+        Made to reduce code duplication.
+        """
         output = ""
         counter = counter_initial_value
         for item in (e for e in element if str(e).strip()):
@@ -37,14 +53,36 @@ class BaseUnmarker(abc.ABC):
         return "".join(map(self.__escape_character, string))
 
     def __escape_character(self, char: str) -> str:
+        """Escape a single character"""
         assert len(char) == 1
-        return self.ESCAPING_DICT.get(char, char)
+        if char in self.ESCAPABLES:
+            return "\\" + char
+        return lib_html.escape(char)
+
+    def wrap(self, element: bs4.BeautifulSoup, around_with: str) -> str:
+        """Wrap an element in a markdown-safe manner
+
+        Parameters
+        ----------
+        element : bs4.BeautifulSoup
+            The element to wrap.
+        around_with : str
+            What to wrap `element` around with.
+
+        Notes
+        -----
+            `around_with` will not be escaped.
+
+        Returns
+        -------
+        str
+            The wrapped version of the element.
+
+        """
+        return around_with + self.__parse(element, escape=True) + around_with
 
     def __parse(self, html: bs4.BeautifulSoup, escape: bool = False) -> str:
-        # TODO: Modularize
-        def wrap(element: bs4.BeautifulSoup, around_with: str) -> str:
-            return around_with + self.__parse(element, escape=True) + around_with
-
+        """Parse an HTML element into valid markdown."""
         output = ""
         if html is None:
             return ""
@@ -54,70 +92,93 @@ class BaseUnmarker(abc.ABC):
                     output += "\n\n"
                 else:
                     output += self.escape(child) if escape else child
-            elif child.name == "div":  # Other text
-                output += self.__parse(child)
-            elif child.name == "p":  # Normal text
-                output += self.__parse(child, escape=True)
-            elif child.name == "del":
-                output += wrap(child, around_with="~~")
-            elif child.name == "pre":  # Code blocks
-                output += (
-                    f"\n```{self.detect_language(child)}\n{child.code.get_text()}```\n"
+            else:
+                name: str = child.name
+                # To reduce code duplication
+                name = (
+                    self.DEFAULT_TAG_ALIASES.get(name)
+                    or self.TAG_ALIASES.get(name)
+                    or name
                 )
-            elif child.name == "code":  # Inline Code
-                output += f"`{self.__parse(child, escape=False)}`"
-            elif child.name == "hr":  # One of those line thingies
-                output += "\n---\n"
-            elif child.name.startswith("h"):  # Headers
-                output += "#" * int(child.name[1:]) + " " + self.__parse(child) + "\n"
-            elif child.name in {"b", "strong"}:  # Bold
-                output += wrap(child, around_with="**")
-            elif child.name in {"i", "em"}:  # Italics
-                output += wrap(child, around_with="*")
-            elif child.name == "a":  # Link
-                output += (
-                    f"[{self.__parse(child)}]({child['href']}"
-                    + (
-                        " " + repr(self.escape(child["title"]))
-                        if child.get("title")
-                        else ""
-                    )
-                    + ")"
-                )
-            elif child.name == "img":  # Images
+
                 try:
-                    tag = child.contents[0]
-                except IndexError:
-                    tag = child
-                try:
-                    tag_text = child.contents[-1]
-                except IndexError:
-                    next_sib = tag.next_sibling
-                    tag_text = (
-                        next_sib.extract().strip()
-                        if next_sib
-                        else tag.get_text().strip()
-                    )
-                output += f"![{tag.get('alt') or tag_text}]({tag['src']})"
-            elif child.name == "ul":  # Bullet list
-                output += self.__render_list(child, self.UNORDERED_FORMAT)
-            elif child.name == "ol":  # Number list
-                output += self.__render_list(
-                    child,
-                    self.ORDERED_FORMAT,
-                    counter_initial_value=int(child.get("start", 1)),
-                )
-            elif child.name == "br":
-                output += "\n\n"
-            elif child.name == "blockquote":
-                output += (
-                    (">" * (len(child("blockquote")) or 1))
-                    + self.__parse(child).strip()
-                    + "\n"
-                )
-            else:  # Other HTML tags that weren't mentioned here
-                output += str(child)
+                    output += getattr(self, "tag_" + name)(child)
+                except AttributeError:
+                    if name.startswith("h"):
+                        output += "#" * int(name[1:]) + " " + self.__parse(child) + "\n"
+                        continue
+                    output += self.handle_default(child)
         return output
+
+    def handle_default(self, child: bs4.BeautifulSoup) -> str:
+        """Whenever a tag isn't handled by one of these methods, this is called"""
+        return str(child)
+
+    def tag_div(self, child: bs4.BeautifulSoup) -> str:
+        return self.__parse(child)
+
+    def tag_p(self, child: bs4.BeautifulSoup) -> str:
+        return self.__parse(child, escape=True)
+
+    def tag_del(self, child: bs4.BeautifulSoup) -> str:
+        return self.wrap(child, around_with="~~")
+
+    def tag_pre(self, child: bs4.BeautifulSoup) -> str:
+        return f"\n```{self.detect_language(child)}\n{child.code.get_text()}```\n"
+
+    def tag_code(self, child: bs4.BeautifulSoup) -> str:
+        return f"`{self.__parse(child)}`"
+
+    def tag_hr(self, _: bs4.BeautifulSoup) -> str:
+        return "\n---\n"
+
+    def tag_b(self, child: bs4.BeautifulSoup) -> str:
+        return self.wrap(child, around_with="**")
+
+    def tag_i(self, child: bs4.BeautifulSoup) -> str:
+        return self.wrap(child, around_with="*")
+
+    def tag_a(self, child: bs4.BeautifulSoup) -> str:
+        return (
+            f"[{self.__parse(child)}]({child['href']}"
+            + (" " + repr(self.escape(child["title"])) if child.get("title") else "")
+            + ")"
+        )
+
+    def tag_img(self, child: bs4.BeautifulSoup) -> str:
+        try:
+            tag = child.contents[0]
+        except IndexError:
+            tag = child
+        try:
+            tag_text = child.contents[-1]
+        except IndexError:
+            next_sib = tag.next_sibling
+            tag_text = (
+                next_sib.extract().strip() if next_sib else tag.get_text().strip()
+            )
+        return f"![{tag.get('alt') or tag_text}]({tag['src']})"
+
+    def tag_ul(self, child: bs4.BeautifulSoup) -> str:
+        return self._render_list(child, self.UNORDERED_FORMAT)
+
+    def tag_ol(self, child: bs4.BeautifulSoup) -> str:
+        return self._render_list(
+            child,
+            self.ORDERED_FORMAT,
+            counter_initial_value=int(child.get("start", 1)),
+        )
+
+    def tag_br(self, _: bs4.BeautifulSoup) -> str:
+        return "\n\n"
+
+    def tag_blockquote(self, child: bs4.BeautifulSoup) -> str:
+        return (
+            (">" * (len(child("blockquote")) or 1)) + self.__parse(child).strip() + "\n"
+        )
+
+    def tag_q(self, child: bs4.BeautifulSoup) -> str:
+        return self.wrap(child, around_with='"')
 
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
@@ -135,7 +196,6 @@ class BaseUnmarker(abc.ABC):
                 html.body.unwrap()
         return self.__parse(html).strip()
 
-    @abc.abstractmethod  # Language detecting compatibilities may vary
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
         """From a block of HTML, detect the language. Usually from CSS classes
 
@@ -150,6 +210,8 @@ class BaseUnmarker(abc.ABC):
             The found language. If no language if found, return "".
 
         """
+        classes = html.get("class") or html.code.get("class")
+        return classes[-1] or ""
 
 
 class StackOverflowUnmarker(BaseUnmarker):

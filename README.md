@@ -162,11 +162,42 @@ If you need to reverse markdown from StackExchange (as in the case for my other 
 
 If the above two classes do not suit your needs, you can subclass the `unmarkd.unmarkers.BaseUnmarker` abstract class.
 
-Currently, you *must* define the following methods:
+Currently, you can *optionally* override the following methods:
 
  - `detect_language` (parameters: **1**)
+    - **Parameters**:
+        - html: `bs4.BeautifulSoup`
     - When a fenced code block is approached, this function is called with a parameter of type `bs4.BeautifulSoup` passed to it; this is the element the code block was detected from (i.e. `pre`).
     - This function is responsible for detecting the programming language (or returning `''` if none was detected) of the code block.
+    - Note: This method is different from `unmarkd.unmarkers.BasicUnmarker`. It is simpler and does less checking/filtering
 
 
-Currently, there are no methods you can *optionally* override.
+But Unmarkd is more flexible than that.
+
+##### Customizable constants
+
+There are currently 3 constants you may override:
+ - Formats:
+    NOTE: Use the [**Format String Syntax**](https://docs.python.org/3/library/string.html#formatstrings)
+     - `UNORDERED_FORMAT`
+        - The string format of unordered (bulleted) lists.
+     - `ORDERED_FORMAT`
+        -  The string format of ordered (numbered) lists.
+ - Miscellaneous:
+     - `ESCAPABLES`
+        - A container (preferably a `set`) of length-1 `str` that should be escaped
+
+##### Customize converting HTML tags
+
+For an HTML tag `some_tag`, you can customize how it's converted to markdown by overriding a method like so:
+
+```python
+from unmarkd.unmarkers import BaseUnmarker
+class MyCustomUnmarker(BaseUnmarker):
+    def tag_some_tag(self, child) -> str:
+        ...  # parse code here
+```
+
+To reduce code duplication, if your tag also has aliases (e.g. `strong` is an alias for `b` in HTML) then you may modify the `TAG_ALIASES`.
+
+If you really need to, you may also modify `DEFAULT_TAG_ALIASES`. Be warned: if you do so, **you will also need to implement the aliases** (currently `em` and `strong`).
