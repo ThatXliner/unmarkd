@@ -3,10 +3,10 @@
 """Generate markdown from messy HTML"""
 
 import abc
-from typing import Union, Dict, Set
+import html as lib_html
+from typing import Dict, Set, Union
 
 import bs4
-import html as lib_html
 
 
 class BaseUnmarker(abc.ABC):
