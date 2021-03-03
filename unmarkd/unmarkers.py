@@ -122,17 +122,14 @@ class BaseUnmarker(abc.ABC):
     def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
         if not type(html) == bs4.BeautifulSoup:
-            try:
-                html = bs4.BeautifulSoup(html, "lxml")
-            except bs4.FeatureNotFound:
-                html = bs4.BeautifulSoup(html, "html.parser")
+            html = bs4.BeautifulSoup(html, "html.parser")
 
-        if html.html is not None:  # Testing if not using "html.parser"
-            html.html.unwrap()  # Maintaining lxml and html5lib compatibility
-            if html.head is not None:  # html5lib compatibility... for the future
-                html.head.decompose()
-            if html.body is not None:  # lxml compatibility
-                html.body.unwrap()
+        # if html.html is not None:  # Testing if not using "html.parser"
+        #     html.html.unwrap()  # Maintaining lxml and html5lib compatibility
+        #     if html.head is not None:  # html5lib compatibility... for the future
+        #         html.head.decompose()
+        #     if html.body is not None:  # lxml compatibility
+        #         html.body.unwrap()
         return self.__parse(html).strip()
 
     @abc.abstractmethod  # Language detecting compatibilities may vary
