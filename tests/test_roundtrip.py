@@ -9,9 +9,9 @@ import unmarkd
 md = markdown_it.MarkdownIt()
 
 
-def helper(text: str) -> None:
+def helper(text: str, func = unmarkd.unmark) -> None:
     value0 = md.render(text)
-    unmarked = unmarkd.unmark(html=value0)
+    unmarked = func(html=value0)
     value1 = md.render(unmarked)
     assert value0 == value1, (value0, value1, unmarked)
 
@@ -20,6 +20,7 @@ def helper(text: str) -> None:
 def test_roundtrip_commonmark_unmark(text):
     assume(unicodedata.normalize("NFKC", text) == text)
     helper(text)
+    helper(text, unmarkd.unmarkers.StackOverflowUnmarker().unmark)
 
 
 # fmt: off
