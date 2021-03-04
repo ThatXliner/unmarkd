@@ -9,7 +9,7 @@ import unmarkd
 md = markdown_it.MarkdownIt()
 
 
-def helper(text: str, func = unmarkd.unmark) -> None:
+def helper(text: str, func=unmarkd.unmark) -> None:
     value0 = md.render(text)
     unmarked = func(html=value0)
     value1 = md.render(unmarked)
