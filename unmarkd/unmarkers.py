@@ -104,7 +104,7 @@ class BaseUnmarker(abc.ABC):
                 try:
                     output += getattr(self, "tag_" + name)(child)
                 except AttributeError:
-                    if name.startswith("h"):
+                    if name.startswith("h"):  # XXX: Maybe H1, up to H6, is enough?
                         output += "#" * int(name[1:]) + " " + self.__parse(child) + "\n"
                         continue
                     output += self.handle_default(child)
