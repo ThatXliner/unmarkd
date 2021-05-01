@@ -13,12 +13,11 @@ include = ["LICENSE.md", "README.md"]
 [tool.poetry.dependencies]
 python = "^3.6"
 beautifulsoup4 = "^4.9.0"
-lxml = {version = "^4.6.2", optional = true}
 cchardet = {version = "^2.1.7", optional = true}
 
 [tool.poetry.extras]
-speedups = ["lxml", "cchardet"]
-all = ["lxml", "cchardet"]
+speedups = ["cchardet"]
+all = ["cchardet"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -30,6 +29,7 @@ hypothesis = {extras = ["cli"], version = "^6.3.1"}
 black = {version = "^20.8b1", allow-prereleases = true}
 markdown-it-py = "^0.6.2"
 pdbpp = "^0.10.2"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
