@@ -37,15 +37,14 @@ class BaseUnmarker(abc.ABC):
         Made to reduce code duplication.
         """
         output = ""
-        counter = counter_initial_value
-        for item in (e for e in element if str(e).strip()):
+        for counter, item in enumerate(
+            (e for e in element if str(e).strip()), counter_initial_value
+        ):
             if item.name != "li":  # Or else it'd be invalid
-                continue
-            assert item.name == "li"
+                continue  # XXX: Fail instead?
             output += item_format.format(
                 next_item=self.__parse(item), number_index=counter
             ).rstrip()
-            counter += 1
         return output
 
     def escape(self, string: str) -> str:
@@ -132,6 +131,9 @@ class BaseUnmarker(abc.ABC):
     def tag_hr(self, _: bs4.BeautifulSoup) -> str:
         return "\n---\n"
 
+    def tag_td(self, child: bs4.BeautifulSoup) -> str:
+        return self.__parse(child, escape=True)
+
     def tag_b(self, child: bs4.BeautifulSoup) -> str:
         return self.wrap(child, around_with="**")
 
@@ -180,20 +182,18 @@ class BaseUnmarker(abc.ABC):
     def tag_q(self, child: bs4.BeautifulSoup) -> str:
         return self.wrap(child, around_with='"')
 
-    def unmark(self, html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
+    def unmark(self, html: Union[str, bs4.BeautifulSoup]) -> str:
         """The main reverser method. Use this to convert HTML into markdown"""
-        if not type(html) == bs4.BeautifulSoup:
-            try:
-                html = bs4.BeautifulSoup(html, "lxml")
-            except bs4.FeatureNotFound:
-                html = bs4.BeautifulSoup(html, "html.parser")
-
-        if html.html is not None:  # Testing if not using "html.parser"
-            html.html.unwrap()  # Maintaining lxml and html5lib compatibility
-            if html.head is not None:  # html5lib compatibility... for the future
-                html.head.decompose()
-            if html.body is not None:  # lxml compatibility
-                html.body.unwrap()
+        if type(html) != bs4.BeautifulSoup:
+            assert isinstance(html, str)
+            html = bs4.BeautifulSoup(html, "html.parser")
+        assert isinstance(html, bs4.BeautifulSoup)
+        # if html.html is not None:  # Testing if not using "html.parser"
+        #     html.html.unwrap()  # Maintaining lxml and html5lib compatibility
+        #     if html.head is not None:  # html5lib compatibility... for the future
+        #         html.head.decompose()
+        #     if html.body is not None:  # lxml compatibility
+        #         html.body.unwrap()
         return self.__parse(html).strip()
 
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
