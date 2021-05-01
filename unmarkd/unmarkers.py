@@ -26,6 +26,9 @@ class BaseUnmarker(abc.ABC):
     UNORDERED_FORMAT: str = "\n- {next_item}\n "
     ORDERED_FORMAT: str = "\n {number_index}. {next_item}\n "
 
+    def parse_css(self, css: str) -> Dict[str, str]:
+        return {k: v for style in css.split(";") for k, v in style.split(":", 1)}
+
     def _render_list(
         self,
         element: bs4.BeautifulSoup,
@@ -197,7 +200,11 @@ class BaseUnmarker(abc.ABC):
         return self.__parse(html).strip()
 
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
-        """From a block of HTML, detect the language. Usually from CSS classes
+        """From a block of HTML, detect the language from the class attribute.
+
+        Warning
+        -------
+        The default is very dumb and will return the first class.
 
         Parameters
         ----------
@@ -211,7 +218,7 @@ class BaseUnmarker(abc.ABC):
 
         """
         classes = html.get("class") or html.code.get("class")
-        return classes[-1] or ""
+        return classes[0] or ""
 
 
 class StackOverflowUnmarker(BaseUnmarker):
@@ -226,7 +233,6 @@ class StackOverflowUnmarker(BaseUnmarker):
             "default",
             "s-code-block",
             "hljs",
-            "lang-sh",
             "snippet-code-js",
             "prettyprint-override",
         ):
@@ -236,7 +242,7 @@ class StackOverflowUnmarker(BaseUnmarker):
                 pass
         if len(classes) == 0:
             return ""
-        output = classes[-1]
+        output = classes[0]
         if output.startswith("lang-"):
             output = output[5:]
         if output.startswith("snippet-code-"):
@@ -256,7 +262,7 @@ class BasicUnmarker(BaseUnmarker):
             return ""
         classes = classes[:]  # Copy it
         assert len(classes) == 1
-        lang = classes[-1]
+        lang = classes[0]
         if lang.startswith("lang-"):
             lang = lang[5:]
         elif lang.startswith("language-"):
