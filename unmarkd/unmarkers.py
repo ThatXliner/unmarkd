@@ -20,8 +20,8 @@ class BaseUnmarker(abc.ABC):
         "-",
         "[",
         "]",
-        "(",
-        ")",
+        # "(",
+        # ")",
     }
     TAG_ALIASES: Dict[str, str] = {}
     DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b"}
