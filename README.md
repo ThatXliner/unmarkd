@@ -225,4 +225,19 @@ If you really need to, you may also modify `DEFAULT_TAG_ALIASES`. Be warned: if 
 
 ##### Utility functions when overriding
 
-TK.
+You may use (when extending) the following functions:
+
+ - `__parse`, 2 parameters:
+    - `html`: *bs4.BeautifulSoup*
+        - The html to unmark. This is used internally by the `unmark` method and is slightly faster.
+    - `escape`: *bool*
+        - Whether to escape the characters inside the string or not. Defaults to `False`.
+ - `escape`: 1 parameter:
+    - `string`: *str*
+        - The string to escape and make markdown-safe
+ - `wrap`: 2 parameters:
+    - `element`: *bs4.BeautifulSoup*
+        - The element to wrap.
+    - `around_with`: *str*
+        - The character to wrap the element around with. **WILL NOT BE ESCPAED**
+ - And, of course, `tag_*` and `detect_language`.
