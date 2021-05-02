@@ -197,7 +197,7 @@ class BaseUnmarker(abc.ABC):
         #         html.head.decompose()
         #     if html.body is not None:  # lxml compatibility
         #         html.body.unwrap()
-        return self.__parse(html).strip()
+        return self.__parse(html).strip().replace("\u0000", "\uFFFD")
 
     def detect_language(self, html: bs4.BeautifulSoup) -> str:
         """From a block of HTML, detect the language from the class attribute.
