@@ -28,8 +28,8 @@ class BaseUnmarker(abc.ABC):
     UNORDERED_FORMAT: str = "\n- {next_item}\n "
     ORDERED_FORMAT: str = "\n {number_index}. {next_item}\n "
 
-    def parse_css(self, css: str) -> Dict[str, str]:
-        return {k: v for style in css.split(";") for k, v in style.split(":", 1)}
+    # def parse_css(self, css: str) -> Dict[str, str]:
+    #     return {k: v for style in css.split(";") for k, v in style.split(":", 1)}
 
     def _render_list(
         self,
