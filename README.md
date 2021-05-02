@@ -10,7 +10,7 @@ Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-pow
 
 This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependancy. In order to create a better API, I needed a way to reverse HTML. So I created this.
 
-There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) ~~but I have not found any written in Python (or for Python)~~ while I did find [Tomd](https://github.com/gaojiuli/tomd), unmarkd still is better. See [comparison](#comparison).
+There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) ~~but I have not found any written in Python (or for Python)~~ later I found a popular library, [html2text](https://github.com/Alir3z4/html2text). But Unmarkd still is *still* better. See [comparison](#comparison).
 
 ## Installation
 
@@ -26,7 +26,7 @@ pip install unmarkd
 
 ## Comparison
 
-**TL;DR: Use Tomd for average HTML reversing. Use Unmarkd if you need to be able to reverse everything you throw it at.**
+**TL;DR: Html2Text is fast. If you don't need much configuration, you could use Html2Text for the little speed increase.**
 
 <details>
 
@@ -35,32 +35,52 @@ pip install unmarkd
 
 ### Speed
 
-**TL;DR: Unmarkd < Tomd**
+**TL;DR: Unmarkd < Html2Text**
 
-For most examples, Unmarkd is *barely* faster:
+Html2Text is basically faster:
 
-![Benchmark](./assets/benchmark_flat.png)
+![Benchmark](./assets/benchmark.png)
 
-For recursive examples, Tomd is *two times* faster:
+(The `DOC` variable used can be found [here](./assets/benchmark.html))
 
-![Benchmark](./assets/benchmark_nest.png)
+Unmarkd sacrifices speed for [power](#configurability).
 
-Wait, **does that mean Unmarkd is slow**? Well, yes. But, as with all Python programs, we sacrifice speed for flexibility.
+Html2Text directly uses Python's [`html.parser`](https://docs.python.org/3/library/html.parser.html) module (in the standard library). On the other hand, Unmarkd uses the powerful HTML parsing library, `beautifulsoup4`. BeautifulSoup can be configured to use different HTML parsers. In Unmarkd, we configure it to use Python's `html.parser`, too.
 
-### Powerfullness
+But another layer of code means more code is ran.
 
-**TL;DR: Unmarkd > Tomd**
+I hope that's a good explanation of the speed difference.
 
-Tomd admits that **it cannot currently handle nested lists** while **Unmarkd can**!
+### Correctness
 
-Let's take the same HTML document from the nested benchmark and actually see the results:
+**TL;DR: Unmarkd == Html2Text**
+
+I actually found *two* html-to-markdown libraries. One of them was [Tomd](https://github.com/gaojiuli/tomd) which had an *incorrect implementation*:
 
 ![Actual results](./assets/tomd_cant_handle.png)
 
-Tomd generates markdown **that is not the same as the original**. But **Unmarkd does** (if it doesn't then it's a bug)! Meaning, **Unmarkd is more reliable than Tomd**.
+It seems to be abandoned, anyway.
 
-Meaning, Unmarkd should handle almost everything you throw at it! 💪
+Now with Html2Text and Unmarkd:
 
+![Epic showdown](./assets/correct.png)
+
+
+In other words, they *work*
+
+### Configurability
+
+**TL;DR: Unmarkd > Html2Text**
+
+This is Unmarkd's strong point.
+
+In Html2Text, you only have a limited [set of options](https://github.com/Alir3z4/html2text/blob/master/docs/usage.md#available-options).
+
+In Unmarkd, you can subclass the `BaseUnmarker` and implement conversions for new tags (e.g. `<q>`), etc. In my opinion, it's much easier to extend and configure Unmarkd.
+
+Unmarkd was originally written as a StackSearch dependancy.
+
+Html2Text has no options for configuring parsing of code blocks. Unmarkd does
 
 </details>
 
@@ -110,6 +130,7 @@ print(unmarkd.unmark(html_doc))
 ```
 and the output:
 
+```markdown
     # Sample Markdown
 
 
@@ -149,7 +170,7 @@ and the output:
     ![bears](http://placebear.com/200/200)
 
     The end ...
-
+```
 ### Extending
 
 #### Brief Overview
@@ -201,3 +222,7 @@ class MyCustomUnmarker(BaseUnmarker):
 To reduce code duplication, if your tag also has aliases (e.g. `strong` is an alias for `b` in HTML) then you may modify the `TAG_ALIASES`.
 
 If you really need to, you may also modify `DEFAULT_TAG_ALIASES`. Be warned: if you do so, **you will also need to implement the aliases** (currently `em` and `strong`).
+
+##### Utility functions when overriding
+
+TK.

@@ -4,7 +4,8 @@
 
 import abc
 import html as lib_html
-from typing import Dict, Set, Union
+import re
+from typing import Dict, Pattern, Set, Union
 
 import bs4
 
@@ -16,6 +17,7 @@ class BaseUnmarker(abc.ABC):
         "\\",
         "~",
         "_",
+        "-",
         "[",
         "]",
         "(",
@@ -141,7 +143,7 @@ class BaseUnmarker(abc.ABC):
         return self.wrap(child, around_with="**")
 
     def tag_i(self, child: bs4.BeautifulSoup) -> str:
-        return self.wrap(child, around_with="*")
+        return self.wrap(child, around_with="_")
 
     def tag_a(self, child: bs4.BeautifulSoup) -> str:
         return (
@@ -199,7 +201,9 @@ class BaseUnmarker(abc.ABC):
         #         html.body.unwrap()
         return self.__parse(html).strip().replace("\u0000", "\uFFFD")
 
-    def detect_language(self, html: bs4.BeautifulSoup) -> str:
+    def detect_language(
+        self, html: bs4.BeautifulSoup
+    ) -> str:  # XXX: Replace with info string
         """From a block of HTML, detect the language from the class attribute.
 
         Warning
