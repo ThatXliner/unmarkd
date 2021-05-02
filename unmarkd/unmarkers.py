@@ -143,7 +143,7 @@ class BaseUnmarker(abc.ABC):
         return self.wrap(child, around_with="**")
 
     def tag_i(self, child: bs4.BeautifulSoup) -> str:
-        return self.wrap(child, around_with="_")
+        return self.wrap(child, around_with="*")
 
     def tag_a(self, child: bs4.BeautifulSoup) -> str:
         return (
