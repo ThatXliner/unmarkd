@@ -29,6 +29,7 @@ hypothesis = {extras = ["cli"], version = "^6.3.1"}
 black = {version = "^20.8b1", allow-prereleases = true}
 markdown-it-py = "^0.6.2"
 pdbpp = "^0.10.2"
+marko = "^1.0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

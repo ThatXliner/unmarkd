@@ -1,18 +1,15 @@
 import unicodedata
 
-import markdown_it
-from hypothesis import assume, example, given
-from hypothesis import strategies as st
-
+import marko
 import unmarkd
-
-md = markdown_it.MarkdownIt()
+from hypothesis import assume, example, given, reproduce_failure
+from hypothesis import strategies as st
 
 
 def helper(text: str, func=unmarkd.unmark) -> None:
-    value0 = md.render(text)
+    value0 = marko.convert(text)
     unmarked = func(html=value0)
-    value1 = md.render(unmarked)
+    value1 = marko.convert(unmarked)
     assert value0 == value1, (value0, value1, unmarked)
 
 
