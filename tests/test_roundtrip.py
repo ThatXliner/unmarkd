@@ -15,7 +15,7 @@ def helper(text: str, func=unmarkd.unmark) -> None:
 
 @given(text=st.text(st.characters(blacklist_categories=("Cc", "Cf", "Cs", "Co", "Cn"))))
 def test_roundtrip_commonmark_unmark(text):
-    assume(unicodedata.normalize("NFKC", text) == text)
+    assume(unicodedata.normalize("NFKC", text).strip() == text)
     helper(text)
     helper(text, unmarkd.unmarkers.StackOverflowUnmarker().unmark)
 
