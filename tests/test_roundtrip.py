@@ -1,9 +1,10 @@
 import unicodedata
 
 import marko
-import unmarkd
 from hypothesis import assume, example, given, reproduce_failure
 from hypothesis import strategies as st
+
+import unmarkd
 
 
 def helper(text: str, func=unmarkd.unmark) -> None:
