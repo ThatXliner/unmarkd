@@ -25,7 +25,7 @@ class BaseUnmarker(abc.ABC):
         # ")",
     }
     TAG_ALIASES: Dict[str, str] = {}
-    DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b"}
+    DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b", "s": "del"}
     UNORDERED_FORMAT: str = "\n- {next_item}\n "
     ORDERED_FORMAT: str = "\n {number_index}. {next_item}\n "
 
