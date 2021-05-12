@@ -193,12 +193,12 @@ class BaseUnmarker(abc.ABC):
             assert isinstance(html, str)
             html = bs4.BeautifulSoup(html, "html.parser")
         assert isinstance(html, bs4.BeautifulSoup)
-        # if html.html is not None:  # Testing if not using "html.parser"
-        #     html.html.unwrap()  # Maintaining lxml and html5lib compatibility
-        #     if html.head is not None:  # html5lib compatibility... for the future
-        #         html.head.decompose()
-        #     if html.body is not None:  # lxml compatibility
-        #         html.body.unwrap()
+        if html.html is not None:  # Testing if not using "html.parser"
+            html.html.unwrap()  # Maintaining lxml and html5lib compatibility
+            if html.head is not None:  # html5lib compatibility... for the future
+                html.head.decompose()
+            if html.body is not None:  # lxml compatibility
+                html.body.unwrap()
         return self.__parse(html).strip().replace("\u0000", "\uFFFD")
 
     def detect_language(
