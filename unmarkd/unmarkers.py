@@ -97,6 +97,8 @@ class BaseUnmarker(abc.ABC):
                     output += "\n\n"
                 else:
                     output += self.escape(child) if escape else child
+            elif type(child) is bs4.element.Doctype:
+                continue
             else:
                 name: str = child.name
                 # To reduce code duplication
