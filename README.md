@@ -8,7 +8,7 @@ Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-pow
 
 ## Why
 
-This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependancy. In order to create a better API, I needed a way to reverse HTML. So I created this.
+This is created as a [StackSearch](http://github.com/ThatXliner/stacksearch) (one of my other projects) dependency. In order to create a better API, I needed a way to reverse HTML. So I created this.
 
 There are [similar projects](https://github.com/xijo/reverse_markdown) (written in Ruby) ~~but I have not found any written in Python (or for Python)~~ later I found a popular library, [html2text](https://github.com/Alir3z4/html2text). But Unmarkd still is *still* better. See [comparison](#comparison).
 
