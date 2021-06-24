@@ -5,7 +5,8 @@
 import abc
 import html as lib_html
 import re
-from typing import Dict, Pattern, Set, Union
+import textwrap
+from typing import Callable, Dict, Set, Union
 
 import bs4
 
@@ -26,8 +27,8 @@ class BaseUnmarker(abc.ABC):
     }
     TAG_ALIASES: Dict[str, str] = {}
     DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b", "s": "del"}
-    UNORDERED_FORMAT: str = "\n- {next_item}\n "
-    ORDERED_FORMAT: str = "\n {number_index}. {next_item}\n "
+    UNORDERED_FORMAT: str = "\n- {next_item}"
+    ORDERED_FORMAT: str = "\n {number_index}. {next_item}"
 
     # def parse_css(self, css: str) -> Dict[str, str]:
     #     return {k: v for style in css.split(";") for k, v in style.split(":", 1)}
@@ -44,13 +45,14 @@ class BaseUnmarker(abc.ABC):
         """
         output = ""
         for counter, item in enumerate(
-            (e for e in element if str(e).strip()), counter_initial_value
+            element(True, recursive=False), counter_initial_value
         ):
-            if item.name != "li":  # Or else it'd be invalid
-                continue  # XXX: Fail instead?
-            output += item_format.format(
-                next_item=self.__parse(item), number_index=counter
-            ).rstrip()
+            output += (
+                item_format.strip().format(
+                    next_item=self.tag_li(item).rstrip(), number_index=counter
+                )
+                + "\n"
+            )
         return output
 
     def escape(self, string: str) -> str:
@@ -86,6 +88,9 @@ class BaseUnmarker(abc.ABC):
         """
         return around_with + self.__parse(element, escape=True) + around_with
 
+    def resolve_handler_func(self, name: str) -> Callable[[bs4.BeautifulSoup], str]:
+        return getattr(self, "tag_" + name)
+
     def __parse(self, html: bs4.BeautifulSoup, escape: bool = False) -> str:
         """Parse an HTML element into valid markdown."""
         output = ""
@@ -109,7 +114,7 @@ class BaseUnmarker(abc.ABC):
                 )
 
                 try:
-                    output += getattr(self, "tag_" + name)(child)
+                    output += self.resolve_handler_func(name)(child)
                 except AttributeError:
                     if name.startswith("h"):  # XXX: Maybe H1, up to H6, is enough?
                         output += "#" * int(name[1:]) + " " + self.__parse(child) + "\n"
@@ -178,6 +183,17 @@ class BaseUnmarker(abc.ABC):
             self.ORDERED_FORMAT,
             counter_initial_value=int(child.get("start", 1)),
         )
+
+    def tag_li(self, child: bs4.BeautifulSoup) -> str:
+        output = ""
+        for elstr in child.children:
+            if str(elstr) == elstr:
+                output += str(elstr).rstrip(" ")
+            else:
+                output += textwrap.indent(
+                    self.resolve_handler_func(elstr.name)(elstr), "    "
+                )
+        return output
 
     def tag_br(self, _: bs4.BeautifulSoup) -> str:
         return "\n\n"
