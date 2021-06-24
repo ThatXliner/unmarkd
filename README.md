@@ -23,7 +23,7 @@ pip install unmarkd
 ## Known issues
 
  - ~~Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))~~ Fixed in [#11](https://github.com/ThatXliner/unmarkd/pull/11)
- - Blockquote bug ([#18](https://github.com/ThatXliner/unmarkd/issues/18))
+ - ~~Blockquote bug ([#18](https://github.com/ThatXliner/unmarkd/issues/18))~~ Fixed in [#23](https://github.com/ThatXliner/unmarkd/pull/23)
 
 ## Comparison
 
