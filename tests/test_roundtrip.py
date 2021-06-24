@@ -48,4 +48,5 @@ class TestExampleCases:
     def test_example_22(self) -> None: helper("- Unordered lists, and:\n 1. One\n 2. Two\n 3. Three\n- More")
     def test_example_23(self) -> None: helper("a\n---\nb")
     def test_example_24(self) -> None: assert unmarkd.unmark('''<!DOCTYPE html><html><body><p>A</p></body></html>''') == 'A'
+    def test_example_25(self) -> None: helper('>>>')
 # fmt: on
