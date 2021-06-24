@@ -199,9 +199,7 @@ class BaseUnmarker(abc.ABC):
         return "\n\n"
 
     def tag_blockquote(self, child: bs4.BeautifulSoup) -> str:
-        return (
-            (">" * (len(child("blockquote")) or 1)) + self.__parse(child).strip() + "\n"
-        )
+        return ">" + self.__parse(child).strip() + "\n"
 
     def tag_q(self, child: bs4.BeautifulSoup) -> str:
         return self.wrap(child, around_with='"')
