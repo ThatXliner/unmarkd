@@ -190,9 +190,12 @@ class BaseUnmarker(abc.ABC):
             if str(elstr) == elstr:
                 output += str(elstr).rstrip(" ")
             else:
-                output += textwrap.indent(
-                    self.resolve_handler_func(elstr.name)(elstr), "    "
-                )
+                if elstr.name in ("ol", "ul"):
+                    output += textwrap.indent(
+                        self.resolve_handler_func(elstr.name)(elstr), "    "
+                    )
+                else:
+                    output += self.resolve_handler_func(elstr.name)(elstr)
         return output
 
     def tag_br(self, _: bs4.BeautifulSoup) -> str:
