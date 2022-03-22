@@ -1,10 +1,12 @@
+**NOTE: This project is *maintained.*** While it may seem inactive, it is because there is nothing to add. If you want an enhancement or want to file a bug report, please go to the [issues](https://github.com/ThatXliner/unmarkd/issues).
+
 # 🔄 Unmarkd
 [![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![CI](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml) [![PyPI - Downloads](https://img.shields.io/pypi/dm/unmarkd)](https://pypi.org/project/unmarkd/)
 
 > A markdown reverser.
 
 ---
-Unmarkd is a [BeautifulSoup](https://github.com/ThatXliner/unmarkd/issues/4)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python.
+Unmarkd is a [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python.
 
 ## Why
 
@@ -19,11 +21,6 @@ You know the drill
 ```bash
 pip install unmarkd
 ```
-
-## Known issues
-
- - ~~Nested lists are not properly indented ([#4](https://github.com/ThatXliner/unmarkd/issues/4))~~ Fixed in [#11](https://github.com/ThatXliner/unmarkd/pull/11)
- - ~~Blockquote bug ([#18](https://github.com/ThatXliner/unmarkd/issues/18))~~ Fixed in [#23](https://github.com/ThatXliner/unmarkd/pull/23)
 
 ## Comparison
 

@@ -11,4 +11,4 @@ def unmark(html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:  # 
     return unmarkers.BasicUnmarker().unmark(html)  # type: ignore
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
