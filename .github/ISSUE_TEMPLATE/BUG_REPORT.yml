@@ -13,7 +13,7 @@ body:
       label: Prerequisites
       description: "Before you continue make sure you have done all of the following:"
       options:
-        - label: I have searched the [issues](https://github.com/{{ cookiecutter.username }}/{{ cookiecutter.pypi_name }}/issues) and believe that it has not already been reported
+        - label: I have searched the [issues](https://github.com/ThatXliner/unmarkd/issues) and believe that it has not already been reported
           required: true
         - label: I have made sure this bug reproduces on the latest version
           required: true
