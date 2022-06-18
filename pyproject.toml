@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "unmarkd"
-version = "0.1.8"
+version = "0.1.9"
 license = "GPL-3.0-or-later"
 description = "A markdown reverser."
 authors = ["Bryan Hu <bryan.hu.2020@gmail.com>"]
