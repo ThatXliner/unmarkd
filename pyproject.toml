@@ -21,7 +21,7 @@ all = ["cchardet"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-mypy = "^0.812"
+mypy = "*"
 pylint = "^2.6.2"
 toml = "^0.10.2"
 pytest-cov = "^2.11.1"

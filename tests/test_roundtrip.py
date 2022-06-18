@@ -49,5 +49,6 @@ class TestExampleCases:
     def test_example_23(self) -> None: helper("a\n---\nb")
     def test_example_24(self) -> None: assert unmarkd.unmark('''<!DOCTYPE html><html><body><p>A</p></body></html>''') == 'A'
     def test_example_25(self) -> None: helper('>>>')
+    def test_example_25(self) -> None: helper(R'\#')
     def test_example_26(self) -> None: assert unmarkd.unmark("<ol>\n<li>A</li>\n<li>B</li>\n<li><b>C</b></li></ol>") == "1. A\n2. B\n3. **C**"
 # fmt: on
