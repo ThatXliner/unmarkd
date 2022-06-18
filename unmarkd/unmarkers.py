@@ -22,6 +22,7 @@ class BaseUnmarker(abc.ABC):
         "[",
         "]",
         ">",
+        "#",
         # "(",
         # ")",
     }
