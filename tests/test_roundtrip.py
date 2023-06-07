@@ -1,7 +1,7 @@
 import unicodedata
 
 import marko
-from hypothesis import assume, example, given, reproduce_failure
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 import unmarkd
@@ -15,7 +15,7 @@ def helper(text: str, func=unmarkd.unmark) -> None:
 
 
 @given(text=st.text(st.characters(blacklist_categories=("Cc", "Cf", "Cs", "Co", "Cn"))))
-def test_roundtrip_commonmark_unmark(text):
+def test_roundtrip_commonmark_unmark(text: str) -> None:
     assume(unicodedata.normalize("NFKC", text).strip() == text)
     helper(text)
     helper(text, unmarkd.unmarkers.StackOverflowUnmarker().unmark)
@@ -47,8 +47,8 @@ class TestExampleCases:
     def test_example_21(self) -> None: helper("```0")
     def test_example_22(self) -> None: helper("- Unordered lists, and:\n 1. One\n 2. Two\n 3. Three\n- More")
     def test_example_23(self) -> None: helper("a\n---\nb")
-    def test_example_24(self) -> None: assert unmarkd.unmark('''<!DOCTYPE html><html><body><p>A</p></body></html>''') == 'A'
-    def test_example_25(self) -> None: helper('>>>')
-    def test_example_25(self) -> None: helper(R'\#')
-    def test_example_26(self) -> None: assert unmarkd.unmark("<ol>\n<li>A</li>\n<li>B</li>\n<li><b>C</b></li></ol>") == "1. A\n2. B\n3. **C**"
+    def test_example_24(self) -> None: assert unmarkd.unmark("""<!DOCTYPE html><html><body><p>A</p></body></html>""") == "A"
+    def test_example_25(self) -> None: helper(">>>")
+    def test_example_26(self) -> None: helper(R"\#")
+    def test_example_27(self) -> None: assert unmarkd.unmark("<ol>\n<li>A</li>\n<li>B</li>\n<li><b>C</b></li></ol>") == "1. A\n2. B\n3. **C**"
 # fmt: on
