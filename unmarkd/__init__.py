@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from . import unmarkers
 
 
-def unmark(html: Union[str, bs4.NavigableString, bs4.BeautifulSoup]) -> str:
+def unmark(html: Union[str, "bs4.NavigableString", "bs4.BeautifulSoup"]) -> str:
     """Convert HTML to markdown."""
     return unmarkers.BasicUnmarker().unmark(html)
 
