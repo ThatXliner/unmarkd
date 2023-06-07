@@ -12,8 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - 3.6
-          - 3.7
           - 3.8
           - 3.9
           - "3.10"
@@ -38,10 +36,10 @@ jobs:
 
       - name: Install Poetry and Poe (UNIX)
         if: runner.os != 'Windows'
-        run: python3 -m pip install poetry==$POETRY_VERSION
+        run: python3 -m pip install poetry==$POETRY_VERSION poethepoet
       - name: Install Poetry and Poe (Windows)
         if: runner.os == 'Windows'
-        run: python -m pip install poetry==$env:POETRY_VERSION
+        run: python -m pip install poetry==$env:POETRY_VERSION poethepoet
 
       - name: Install dependencies
         run: |
@@ -49,9 +47,33 @@ jobs:
           poetry install
           poetry install  # Second time to install the project
       - name: Run test suite
-        run: pytest -vvv --cov=unmarkd --cov-report=xml
+        run: poe ci
       - name: Upload to CodeCov
         uses: codecov/codecov-action@v2
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip poetry==$POETRY_VERSION poethepoet
+          poetry config virtualenvs.in-project true
+          poetry install
+          poetry install  # Second time to install the project
+
+      - name: Build docs
+        run: poe docs
   build:
     runs-on: ubuntu-latest
     steps:
@@ -64,3 +86,33 @@ jobs:
         run: python3 -m pip install --upgrade pip poetry==$POETRY_VERSION
       - name: Build project
         run: poetry build
+  lints:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip poetry==$POETRY_VERSION poethepoet
+          poetry config virtualenvs.in-project true
+          poetry install
+          poetry install  # Second time to install the project
+
+      - name: Run style lints
+        run: poe style
+      - name: Run ruff lints
+        run: poe codebase
+      - name: Run mypy lints
+        run: poe mypy
+
