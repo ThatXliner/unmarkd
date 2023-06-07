@@ -1,7 +1,8 @@
 """A markdown reverser."""
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
-import bs4
+if TYPE_CHECKING:
+    import bs4
 
 from . import unmarkers
 

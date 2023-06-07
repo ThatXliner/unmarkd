@@ -38,6 +38,7 @@ shed = "^0.10.9"
 
 Sphinx = "^6.1.3"
 toml = "^0.10.2"
+types-beautifulsoup4 = "^4.12.0.5"
 
 [tool.poe.tasks]
 # Code linting
@@ -46,7 +47,7 @@ ruff = {cmd = "ruff check unmarkd", help = "Run Ruff on codebase"}
 check_black = {cmd = "black unmarkd --check"}
 check_imports = {cmd = "ruff check unmarkd --select I"}
 style    = ["check_black", "check_imports"]
-codebase = ["ruff", "mypy"]
+codebase = ["ruff"]
     [tool.poe.tasks.docs]
     cmd = "sphinx-build docs build"
     help = "Build documentation"

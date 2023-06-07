@@ -285,9 +285,9 @@ class StackOverflowUnmarker(BaseUnmarker):
             return ""
         output = classes[0]
         if output.startswith("lang-"):
-            output = output[5:]
+            return output[5:]
         if output.startswith("snippet-code-"):
-            output = output[13:]
+            return output[13:]
         return output
 
 
@@ -305,7 +305,7 @@ class BasicUnmarker(BaseUnmarker):
         assert len(classes) == 1
         lang = classes[0]
         if lang.startswith("lang-"):
-            lang = lang[5:]
-        elif lang.startswith("language-"):
-            lang = lang[9:]
+            return lang[5:]
+        if lang.startswith("language-"):
+            return lang[9:]
         return lang
