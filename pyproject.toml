@@ -24,6 +24,7 @@ homepage = "https://github.com/ThatXliner/unmarkd"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+beautifulsoup4 = ">=4.12.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
