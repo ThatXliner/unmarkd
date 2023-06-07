@@ -115,4 +115,3 @@ jobs:
         run: poe codebase
       - name: Run mypy lints
         run: poe mypy
-

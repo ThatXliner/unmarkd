@@ -1,11 +1,16 @@
-**NOTE: This project is *maintained.*** While it may seem inactive, it is because there is nothing to add. If you want an enhancement or want to file a bug report, please go to the [issues](https://github.com/ThatXliner/unmarkd/issues).
+**NOTE: This project is _maintained._** While it may seem inactive, it is because there is nothing to add. If you want an enhancement or want to file a bug report, please go to the [issues](https://github.com/ThatXliner/unmarkd/issues).
 
 # 🔄 Unmarkd
-[![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![CI](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml) [![PyPI - Downloads](https://img.shields.io/pypi/dm/unmarkd)](https://pypi.org/project/unmarkd/)
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)[![codecov](https://codecov.io/gh/ThatXliner/unmarkd/branch/master/graph/badge.svg?token=PWVIERHTG3)](https://codecov.io/gh/ThatXliner/unmarkd) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![CI](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/unmarkd/actions/workflows/ci.yml) [![PyPI - Downloads](https://img.shields.io/pypi/dm/unmarkd)](https://pypi.org/project/unmarkd/)
 
 > A markdown reverser.
 
 ---
+
 Unmarkd is a [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)-powered [Markdown](https://en.wikipedia.org/wiki/Markdown) reverser written in Python and for Python.
 
 ## Why
@@ -27,7 +32,6 @@ pip install unmarkd
 **TL;DR: Html2Text is fast. If you don't need much configuration, you could use Html2Text for the little speed increase.**
 
 <details>
-
 
 <summary>Click to expand</summary>
 
@@ -53,7 +57,7 @@ I hope that's a good explanation of the speed difference.
 
 **TL;DR: Unmarkd == Html2Text**
 
-I actually found *two* html-to-markdown libraries. One of them was [Tomd](https://github.com/gaojiuli/tomd) which had an *incorrect implementation*:
+I actually found _two_ html-to-markdown libraries. One of them was [Tomd](https://github.com/gaojiuli/tomd) which had an _incorrect implementation_:
 
 ![Actual results](./assets/tomd_cant_handle.png)
 
@@ -63,8 +67,7 @@ Now with Html2Text and Unmarkd:
 
 ![Epic showdown](./assets/correct.png)
 
-
-In other words, they *work*
+In other words, they _work_
 
 ### Configurability
 
@@ -126,9 +129,10 @@ html_doc = R"""<h1 id="sample-markdown">Sample Markdown</h1>
 """
 print(unmarkd.unmark(html_doc))
 ```
+
 and the output:
 
-```markdown
+````markdown
     # Sample Markdown
 
 
@@ -168,7 +172,8 @@ and the output:
     ![bears](http://placebear.com/200/200)
 
     The end ...
-```
+````
+
 ### Extending
 
 #### Brief Overview
@@ -181,30 +186,30 @@ If you need to reverse markdown from StackExchange (as in the case for my other 
 
 If the above two classes do not suit your needs, you can subclass the `unmarkd.unmarkers.BaseUnmarker` abstract class.
 
-Currently, you can *optionally* override the following methods:
+Currently, you can _optionally_ override the following methods:
 
- - `detect_language` (parameters: **1**)
-    - **Parameters**:
-        - html: `bs4.BeautifulSoup`
-    - When a fenced code block is approached, this function is called with a parameter of type `bs4.BeautifulSoup` passed to it; this is the element the code block was detected from (i.e. `pre`).
-    - This function is responsible for detecting the programming language (or returning `''` if none was detected) of the code block.
-    - Note: This method is different from `unmarkd.unmarkers.BasicUnmarker`. It is simpler and does less checking/filtering
-
+- `detect_language` (parameters: **1**)
+  - **Parameters**:
+    - html: `bs4.BeautifulSoup`
+  - When a fenced code block is approached, this function is called with a parameter of type `bs4.BeautifulSoup` passed to it; this is the element the code block was detected from (i.e. `pre`).
+  - This function is responsible for detecting the programming language (or returning `''` if none was detected) of the code block.
+  - Note: This method is different from `unmarkd.unmarkers.BasicUnmarker`. It is simpler and does less checking/filtering
 
 But Unmarkd is more flexible than that.
 
 ##### Customizable constants
 
 There are currently 3 constants you may override:
- - Formats:
-    NOTE: Use the [**Format String Syntax**](https://docs.python.org/3/library/string.html#formatstrings)
-     - `UNORDERED_FORMAT`
-        - The string format of unordered (bulleted) lists.
-     - `ORDERED_FORMAT`
-        -  The string format of ordered (numbered) lists.
- - Miscellaneous:
-     - `ESCAPABLES`
-        - A container (preferably a `set`) of length-1 `str` that should be escaped
+
+- Formats:
+  NOTE: Use the [**Format String Syntax**](https://docs.python.org/3/library/string.html#formatstrings)
+  - `UNORDERED_FORMAT`
+    - The string format of unordered (bulleted) lists.
+  - `ORDERED_FORMAT`
+    - The string format of ordered (numbered) lists.
+- Miscellaneous:
+  - `ESCAPABLES`
+    - A container (preferably a `set`) of length-1 `str` that should be escaped
 
 ##### Customize converting HTML tags
 
@@ -225,17 +230,17 @@ If you really need to, you may also modify `DEFAULT_TAG_ALIASES`. Be warned: if 
 
 You may use (when extending) the following functions:
 
- - `__parse`, 2 parameters:
-    - `html`: *bs4.BeautifulSoup*
-        - The html to unmark. This is used internally by the `unmark` method and is slightly faster.
-    - `escape`: *bool*
-        - Whether to escape the characters inside the string or not. Defaults to `False`.
- - `escape`: 1 parameter:
-    - `string`: *str*
-        - The string to escape and make markdown-safe
- - `wrap`: 2 parameters:
-    - `element`: *bs4.BeautifulSoup*
-        - The element to wrap.
-    - `around_with`: *str*
-        - The character to wrap the element around with. **WILL NOT BE ESCPAED**
- - And, of course, `tag_*` and `detect_language`.
+- `__parse`, 2 parameters:
+  - `html`: _bs4.BeautifulSoup_
+    - The html to unmark. This is used internally by the `unmark` method and is slightly faster.
+  - `escape`: _bool_
+    - Whether to escape the characters inside the string or not. Defaults to `False`.
+- `escape`: 1 parameter:
+  - `string`: _str_
+    - The string to escape and make markdown-safe
+- `wrap`: 2 parameters:
+  - `element`: _bs4.BeautifulSoup_
+    - The element to wrap.
+  - `around_with`: _str_
+    - The character to wrap the element around with. **WILL NOT BE ESCPAED**
+- And, of course, `tag_*` and `detect_language`.
