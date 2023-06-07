@@ -6,7 +6,7 @@ import abc
 import html as lib_html
 import re
 import textwrap
-from typing import Callable, Dict, Set, Union
+from typing import Callable, Dict, Set, Union, Optional
 
 import bs4
 
@@ -106,13 +106,17 @@ class BaseUnmarker(abc.ABC):
             elif type(child) is bs4.element.Doctype:
                 continue
             else:
-                name: str = child.name
+                name: Optional[str] = child.name
                 # To reduce code duplication
                 name = (
                     self.DEFAULT_TAG_ALIASES.get(name)
                     or self.TAG_ALIASES.get(name)
                     or name
                 )
+                if name is None:
+                    assert isinstance(child, bs4.Comment)
+                    output += self.handle_comment(child)
+                    continue
 
                 try:
                     output += self.resolve_handler_func(name)(child)
@@ -122,6 +126,13 @@ class BaseUnmarker(abc.ABC):
                         continue
                     output += self.handle_default(child)
         return output
+
+    def handle_comment(self, child: bs4.Comment) -> str:
+        """Self explanatory."""
+        # Should not cause any escaping problems since
+        # BeautifulSoup escapes the string contents
+        # See also https://www.crummy.com/software/BeautifulSoup/bs4/doc/#output-formatters
+        return f"<!--{child}-->"
 
     def handle_default(self, child: bs4.BeautifulSoup) -> str:
         """Whenever a tag isn't handled by one of these methods, this is called"""
