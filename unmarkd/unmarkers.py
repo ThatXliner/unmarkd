@@ -3,9 +3,11 @@ import abc
 import contextlib
 import html as lib_html
 import textwrap
-from typing import Callable, Dict, Optional, Set, Union
+from typing import Callable, Dict, Set, Union
 
 import bs4
+
+SoupElement = Union[bs4.PageElement, bs4.BeautifulSoup]
 
 
 class BaseUnmarker(abc.ABC):
@@ -32,7 +34,7 @@ class BaseUnmarker(abc.ABC):
 
     def _render_list(
         self: "BaseUnmarker",
-        element: bs4.BeautifulSoup,
+        element: bs4.Tag,
         item_format: str,
         counter_initial_value: int = 1,
     ) -> str:
@@ -65,7 +67,7 @@ class BaseUnmarker(abc.ABC):
             return "\\" + char
         return lib_html.escape(char)
 
-    def wrap(self: "BaseUnmarker", element: bs4.BeautifulSoup, around_with: str) -> str:
+    def wrap(self: "BaseUnmarker", element: SoupElement, around_with: str) -> str:
         """Wrap an element in a markdown-safe manner.
 
         Parameters
@@ -87,41 +89,53 @@ class BaseUnmarker(abc.ABC):
         """
         return around_with + self.__parse(element, escape=True) + around_with
 
+    def handle_tag(self: "BaseUnmarker", tag: bs4.Tag) -> str:
+        return self.resolve_handler_func(tag.name)(tag)
+
     def resolve_handler_func(
         self: "BaseUnmarker",
         name: str,
-    ) -> Callable[[bs4.BeautifulSoup], str]:
-        return getattr(self, "tag_" + name)
+    ) -> Callable[[bs4.Tag], str]:
+        return getattr(self, "tag_" + name)  # type: ignore[no-any-return]
+
+    def handle_string(self: "BaseUnmarker", string: str) -> str:
+        assert isinstance(string, str)
+        if string == "\n":
+            return "\n\n"
+        return self.escape(string) if self._should_escape else string
+
+    def handle_doctype(self: "BaseUnmarker", _: bs4.Doctype) -> str:
+        return ""
+
+    def handle_non_tags(self: "BaseUnmarker", child: bs4.PageElement) -> str:
+        if isinstance(child, str):
+            assert isinstance(child, str)
+            return self.handle_string(child)
+        if isinstance(child, bs4.Doctype):
+            return self.handle_doctype(child)
+        if isinstance(child, bs4.Comment):
+            return self.handle_comment(child)
+        return ""  # To indicate that it is a tag
 
     def __parse(
         self: "BaseUnmarker",
-        html: bs4.BeautifulSoup,
+        html: SoupElement,
         escape: bool = False,
     ) -> str:
         """Parse an HTML element into valid markdown."""
+        self._should_escape = escape  # for handle_string
         output = ""
         if html is None:
             return ""
-        for child in html.children:
-            if type(child) in (str, bs4.NavigableString):
-                if child == "\n":
-                    output += "\n\n"
-                else:
-                    output += self.escape(child) if escape else child
-            elif type(child) is bs4.element.Doctype:
-                continue
-            else:
-                name: Optional[str] = child.name
+        for child in html.children:  # type: ignore[union-attr]
+            if isinstance(child, bs4.Tag):
+                name: str = child.name
                 # To reduce code duplication
                 name = (
                     self.DEFAULT_TAG_ALIASES.get(name)
                     or self.TAG_ALIASES.get(name)
                     or name
                 )
-                if name is None:
-                    assert isinstance(child, bs4.Comment)
-                    output += self.handle_comment(child)
-                    continue
 
                 try:
                     output += self.resolve_handler_func(name)(child)
@@ -130,6 +144,8 @@ class BaseUnmarker(abc.ABC):
                         output += "#" * int(name[1:]) + " " + self.__parse(child) + "\n"
                         continue
                     output += self.handle_default(child)
+            else:
+                output += self.handle_non_tags(child)
         return output
 
     def handle_comment(self: "BaseUnmarker", child: bs4.Comment) -> str:
@@ -139,89 +155,87 @@ class BaseUnmarker(abc.ABC):
         # See also https://www.crummy.com/software/BeautifulSoup/bs4/doc/#output-formatters
         return f"<!--{child}-->"
 
-    def handle_default(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def handle_default(self: "BaseUnmarker", child: bs4.PageElement) -> str:
         """Whenever a tag isn't handled by one of these methods, this is called."""
         return str(child)
 
-    def tag_div(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_div(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.__parse(child)
 
-    def tag_p(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_p(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.__parse(child, escape=True)
 
-    def tag_del(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_del(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with="~~")
 
-    def tag_pre(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_pre(self: "BaseUnmarker", child: bs4.Tag) -> str:
+        assert child.code is not None
         return f"\n```{self.detect_language(child)}\n{child.code.get_text()}```\n"
 
-    def tag_code(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_code(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return f"`{self.__parse(child)}`"
 
     def tag_hr(self: "BaseUnmarker", _: bs4.BeautifulSoup) -> str:
         return "\n---\n"
 
-    def tag_td(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_td(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.__parse(child, escape=True)
 
-    def tag_b(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_b(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with="**")
 
-    def tag_i(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_i(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with="*")
 
-    def tag_a(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_a(self: "BaseUnmarker", child: bs4.Tag) -> str:
+        assert isinstance(child["title"], str)
         return (
             f"[{self.__parse(child)}]({child['href']}"
             + (" " + repr(self.escape(child["title"])) if child.get("title") else "")
             + ")"
         )
 
-    def tag_img(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
-        try:
-            tag = child.contents[0]
-        except IndexError:
-            tag = child
-        try:
-            tag_text = child.contents[-1]
-        except IndexError:
-            next_sib = tag.next_sibling
-            tag_text = (
-                next_sib.extract().strip() if next_sib else tag.get_text().strip()
-            )
-        return f"![{tag.get('alt') or tag_text}]({tag['src']})"
+    def tag_img(self: "BaseUnmarker", img: bs4.Tag) -> str:
+        img_text = ""
+        if (parent := img.parent) is not None and (
+            figcaption := parent.find("figcaption")
+        ) is not None:
+            img_text = figcaption.get_text()
+        return f"![{img.get('alt') or img_text}]({img['src']})"
 
-    def tag_ul(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_ul(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self._render_list(child, self.UNORDERED_FORMAT)
 
-    def tag_ol(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_ol(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self._render_list(
             child,
             self.ORDERED_FORMAT,
-            counter_initial_value=int(child.get("start", 1)),
+            counter_initial_value=int(child.get("start", 1)),  # type: ignore[arg-type]
         )
 
-    def tag_li(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_li(self: "BaseUnmarker", child: bs4.Tag) -> str:
         output = ""
-        for elstr in child.children:
-            if str(elstr) == elstr:
-                output += str(elstr).rstrip(" ")
-            elif elstr.name in ("ol", "ul"):
+        for element in child.children:
+            if non_tag_output := self.handle_non_tags(child):
+                output += non_tag_output
+                continue
+            assert isinstance(element, bs4.Tag)
+            if element.name in ("ol", "ul"):
                 output += textwrap.indent(
-                    self.resolve_handler_func(elstr.name)(elstr),
+                    self.handle_tag(element),
                     "    ",
                 )
             else:
-                output += self.resolve_handler_func(elstr.name)(elstr)
+                output += self.handle_tag(element)
         return output
 
     def tag_br(self: "BaseUnmarker", _: bs4.BeautifulSoup) -> str:
         return "\n\n"
 
-    def tag_blockquote(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_blockquote(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return ">" + self.__parse(child).strip() + "\n"
 
-    def tag_q(self: "BaseUnmarker", child: bs4.BeautifulSoup) -> str:
+    def tag_q(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with='"')
 
     def unmark(self: "BaseUnmarker", html: Union[str, bs4.BeautifulSoup]) -> str:
@@ -240,7 +254,7 @@ class BaseUnmarker(abc.ABC):
 
     def detect_language(
         self: "BaseUnmarker",
-        html: bs4.BeautifulSoup,
+        html: bs4.Tag,
     ) -> str:  # XXX: Replace with info string
         """From a block of HTML, detect the language from the class attribute.
 
@@ -259,18 +273,21 @@ class BaseUnmarker(abc.ABC):
             The found language. If no language if found, return "".
 
         """
-        classes = html.get("class") or html.code.get("class")
+        classes = html.get("class") or html.code.get("class") if html.code else None
+        if not classes:
+            return ""
         return classes[0] or ""
 
 
 class StackOverflowUnmarker(BaseUnmarker):
     """A specialized unmarker for HTML found on StackOverflow."""
 
-    def detect_language(self: "BaseUnmarker", html: bs4.BeautifulSoup) -> str:
+    def detect_language(self: "BaseUnmarker", html: bs4.Tag) -> str:
+        assert html.code is not None
         classes = html.get("class") or html.code.get("class")
         if classes is None:
             return ""
-        classes = classes[:]  # Copy it
+        assert isinstance(classes, list)
         for item in (
             "default",
             "s-code-block",
@@ -297,8 +314,8 @@ StackExchangeUnmarker = StackOverflowUnmarker
 class BasicUnmarker(BaseUnmarker):
     """The basic, generic unmarker."""
 
-    def detect_language(self: "BaseUnmarker", html: bs4.BeautifulSoup) -> str:
-        classes = html.get("class") or html.code.get("class")
+    def detect_language(self: "BaseUnmarker", html: bs4.Tag) -> str:
+        classes = html.get("class") or (html.code.get("class") if html.code else None)
         if classes is None:
             return ""
         classes = classes[:]  # Copy it

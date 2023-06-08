@@ -48,7 +48,7 @@ ruff = {cmd = "ruff check unmarkd", help = "Run Ruff on codebase"}
 check_black = {cmd = "black unmarkd --check"}
 check_imports = {cmd = "ruff check unmarkd --select I"}
 style    = ["check_black", "check_imports"]
-codebase = ["ruff"]
+codebase = ["ruff", "mypy"]
     [tool.poe.tasks.docs]
     cmd = "sphinx-build docs build"
     help = "Build documentation"

@@ -87,5 +87,5 @@ jobs:
 
       - name: Run style lints
         run: poe style
-      - name: Run ruff lints
+      - name: Run correctness lints
         run: poe codebase
