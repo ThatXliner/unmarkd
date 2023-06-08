@@ -51,4 +51,5 @@ class TestExampleCases:
     def test_example_25(self) -> None: helper(">>>")
     def test_example_26(self) -> None: helper(R"\#")
     def test_example_27(self) -> None: assert unmarkd.unmark("<ol>\n<li>A</li>\n<li>B</li>\n<li><b>C</b></li></ol>") == "1. A\n2. B\n3. **C**"
+    def test_example_28(self) -> None: helper("~~*e*~~ and ~~**b**~~")
 # fmt: on

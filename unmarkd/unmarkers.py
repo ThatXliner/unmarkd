@@ -27,8 +27,8 @@ class BaseUnmarker(abc.ABC):
     }
     TAG_ALIASES: Dict[str, str] = {}
     DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b", "s": "del"}
-    UNORDERED_FORMAT: str = "- {next_item}\n"
-    ORDERED_FORMAT: str = "{number_index}. {next_item}\n"
+    UNORDERED_FORMAT: str = "\n- {next_item}"
+    ORDERED_FORMAT: str = "\n{number_index}. {next_item}"
 
     # def parse_css(self: "BaseUnmarker", css: str) -> Dict[str, str]:
 
@@ -56,7 +56,7 @@ class BaseUnmarker(abc.ABC):
                 number_index=counter,
             )
             counter += 1
-        return output
+        return output.lstrip("\n")
 
     def escape(self: "BaseUnmarker", string: str) -> str:
         """Escape a string to be markdown-safe."""
