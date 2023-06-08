@@ -27,8 +27,8 @@ class BaseUnmarker(abc.ABC):
     }
     TAG_ALIASES: Dict[str, str] = {}
     DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b", "s": "del"}
-    UNORDERED_FORMAT: str = "\n- {next_item}"
-    ORDERED_FORMAT: str = "\n {number_index}. {next_item}"
+    UNORDERED_FORMAT: str = "- {next_item}\n"
+    ORDERED_FORMAT: str = "{number_index}. {next_item}\n"
 
     # def parse_css(self: "BaseUnmarker", css: str) -> Dict[str, str]:
 
@@ -45,17 +45,15 @@ class BaseUnmarker(abc.ABC):
         output = ""
         counter = counter_initial_value
         for child in element.children:
-            output = output.rstrip() + "\n"
             if non_tag_output := self.parse_non_tags(child):
+                if non_tag_output.strip() == "":
+                    continue
                 output += non_tag_output
                 continue
             assert isinstance(child, bs4.Tag), type(element)
-            output += (
-                item_format.strip().format(
-                    next_item=self.tag_li(child).rstrip(),
-                    number_index=counter,
-                )
-                + "\n"
+            output += item_format.format(
+                next_item=self.tag_li(child).rstrip(),
+                number_index=counter,
             )
             counter += 1
         return output
