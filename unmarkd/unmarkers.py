@@ -137,7 +137,10 @@ class BaseUnmarker(abc.ABC):
                 snake_string += char.lower()
             return snake_string
 
-        if isinstance(child, bs4.NavigableString):
+        if (
+            issubclass(type(child), bs4.NavigableString)
+            and type(child) is not bs4.NavigableString
+        ):
             try:
                 return getattr(  # type: ignore[no-any-return]
                     self,
@@ -147,8 +150,8 @@ class BaseUnmarker(abc.ABC):
                 )
             except AttributeError as error:
                 msg = "This should never happen"
-                raise AssertionError(msg) from error
-        if isinstance(child, str):
+                raise AssertionError(msg, type(child)) from error
+        if isinstance(child, (str, bs4.NavigableString)):
             return self.handle_string(child)
         return ""  # To indicate that it is a tag
 
