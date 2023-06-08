@@ -115,7 +115,8 @@ class BaseUnmarker(abc.ABC):
         return ""
 
     def handle_processing_instruction(
-        self: "BaseUnmarker", _: bs4.ProcessingInstruction
+        self: "BaseUnmarker",
+        _: bs4.ProcessingInstruction,
     ) -> str:
         return ""
 
@@ -138,11 +139,15 @@ class BaseUnmarker(abc.ABC):
 
         if isinstance(child, bs4.NavigableString):
             try:
-                return getattr(self, f"handle_{pascal_to_snake(type(child).__name__)}")(
+                return getattr(  # type: ignore[no-any-return]
+                    self,
+                    f"handle_{pascal_to_snake(type(child).__name__)}",
+                )(
                     child,
                 )
-            except AttributeError:
-                ...
+            except AttributeError as error:
+                msg = "This should never happen"
+                raise AssertionError(msg) from error
         if isinstance(child, str):
             return self.handle_string(child)
         return ""  # To indicate that it is a tag
