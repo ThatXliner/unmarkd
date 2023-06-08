@@ -43,17 +43,21 @@ class BaseUnmarker(abc.ABC):
         Made to reduce code duplication.
         """
         output = ""
-        for counter, item in enumerate(
-            element(True, recursive=False),
-            counter_initial_value,
-        ):
+        counter = counter_initial_value
+        for child in element.children:
+            output = output.rstrip() + "\n"
+            if non_tag_output := self.parse_non_tags(child):
+                output += non_tag_output
+                continue
+            assert isinstance(child, bs4.Tag), type(element)
             output += (
                 item_format.strip().format(
-                    next_item=self.tag_li(item).rstrip(),
+                    next_item=self.tag_li(child).rstrip(),
                     number_index=counter,
                 )
                 + "\n"
             )
+            counter += 1
         return output
 
     def escape(self: "BaseUnmarker", string: str) -> str:
@@ -99,7 +103,6 @@ class BaseUnmarker(abc.ABC):
         return getattr(self, "tag_" + name)  # type: ignore[no-any-return]
 
     def handle_string(self: "BaseUnmarker", string: str) -> str:
-        assert isinstance(string, str)
         if string == "\n":
             return "\n\n"
         return self.escape(string) if self._should_escape else string
@@ -107,14 +110,43 @@ class BaseUnmarker(abc.ABC):
     def handle_doctype(self: "BaseUnmarker", _: bs4.Doctype) -> str:
         return ""
 
-    def handle_non_tags(self: "BaseUnmarker", child: bs4.PageElement) -> str:
+    def handle_cdata(self: "BaseUnmarker", _: bs4.CData) -> str:
+        return ""
+
+    def handle_declaration(self: "BaseUnmarker", _: bs4.Declaration) -> str:
+        return ""
+
+    def handle_processing_instruction(
+        self: "BaseUnmarker", _: bs4.ProcessingInstruction
+    ) -> str:
+        return ""
+
+    def handle_comment(self: "BaseUnmarker", child: bs4.Comment) -> str:
+        """Self explanatory."""
+        # Should not cause any escaping problems since
+        # BeautifulSoup escapes the string contents
+        # See also https://www.crummy.com/software/BeautifulSoup/bs4/doc/#output-formatters
+        return f"<!--{child}-->"
+
+    def parse_non_tags(self: "BaseUnmarker", child: bs4.PageElement) -> str:
+        # Function generated via ChatGPT
+        def pascal_to_snake(pascal_string: str) -> str:
+            snake_string = ""
+            for i, char in enumerate(pascal_string):
+                if i > 0 and char.isupper():
+                    snake_string += "_"
+                snake_string += char.lower()
+            return snake_string
+
+        if isinstance(child, bs4.NavigableString):
+            try:
+                return getattr(self, f"handle_{pascal_to_snake(type(child).__name__)}")(
+                    child,
+                )
+            except AttributeError:
+                ...
         if isinstance(child, str):
-            assert isinstance(child, str)
             return self.handle_string(child)
-        if isinstance(child, bs4.Doctype):
-            return self.handle_doctype(child)
-        if isinstance(child, bs4.Comment):
-            return self.handle_comment(child)
         return ""  # To indicate that it is a tag
 
     def __parse(
@@ -145,15 +177,8 @@ class BaseUnmarker(abc.ABC):
                         continue
                     output += self.handle_default(child)
             else:
-                output += self.handle_non_tags(child)
+                output += self.parse_non_tags(child)
         return output
-
-    def handle_comment(self: "BaseUnmarker", child: bs4.Comment) -> str:
-        """Self explanatory."""
-        # Should not cause any escaping problems since
-        # BeautifulSoup escapes the string contents
-        # See also https://www.crummy.com/software/BeautifulSoup/bs4/doc/#output-formatters
-        return f"<!--{child}-->"
 
     def handle_default(self: "BaseUnmarker", child: bs4.PageElement) -> str:
         """Whenever a tag isn't handled by one of these methods, this is called."""
@@ -188,10 +213,13 @@ class BaseUnmarker(abc.ABC):
         return self.wrap(child, around_with="*")
 
     def tag_a(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        assert isinstance(child["title"], str)
         return (
             f"[{self.__parse(child)}]({child['href']}"
-            + (" " + repr(self.escape(child["title"])) if child.get("title") else "")
+            + (
+                " " + repr(self.escape(child["title"]))  # type: ignore[arg-type]
+                if child.get("title")
+                else ""
+            )
             + ")"
         )
 
@@ -216,10 +244,10 @@ class BaseUnmarker(abc.ABC):
     def tag_li(self: "BaseUnmarker", child: bs4.Tag) -> str:
         output = ""
         for element in child.children:
-            if non_tag_output := self.handle_non_tags(child):
+            if (non_tag_output := self.parse_non_tags(element)).strip() != "":
                 output += non_tag_output
                 continue
-            assert isinstance(element, bs4.Tag)
+            assert isinstance(element, bs4.Tag), type(element)
             if element.name in ("ol", "ul"):
                 output += textwrap.indent(
                     self.handle_tag(element),

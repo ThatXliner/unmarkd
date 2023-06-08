@@ -7,6 +7,6 @@ class TestComments:
 
     def test_list(self) -> None:
         assert (
-            unmarkd.unmark("<ol><!--e--><li><!--Comment-->Hi</li></ol>")
+            unmarkd.unmark("<!--e-->\n<ol><li><!--Comment-->Hi</li></ol>")
             == "<!--e==>\n1. <!--Comment-->Hi"
         )

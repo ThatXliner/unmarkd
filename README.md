@@ -235,7 +235,7 @@ from unmarkd.unmarkers import BaseUnmarker
 class MyCustomUnmarker(BaseUnmarker):
     def tag_some_tag(self, element) -> str:
         for child in element.children:
-            if non_tag_output := self.handle_non_tags(child):
+            if non_tag_output := self.parse_non_tags(child):
                 output += non_tag_output
                 continue
             assert isinstance(element, bs4.Tag), type(element)
