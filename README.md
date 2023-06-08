@@ -218,13 +218,29 @@ For an HTML tag `some_tag`, you can customize how it's converted to markdown by 
 ```python
 from unmarkd.unmarkers import BaseUnmarker
 class MyCustomUnmarker(BaseUnmarker):
-    def tag_some_tag(self, child) -> str:
+    def tag_some_tag(self, element) -> str:
         ...  # parse code here
 ```
 
 To reduce code duplication, if your tag also has aliases (e.g. `strong` is an alias for `b` in HTML) then you may modify the `TAG_ALIASES`.
 
 If you really need to, you may also modify `DEFAULT_TAG_ALIASES`. Be warned: if you do so, **you will also need to implement the aliases** (currently `em` and `strong`).
+
+###### Common Patterns
+
+I find myself iterating through the children of the tag a lot. But that would lead to us needing to handle new tags, which could be anything. So here's the template/pattern I recommend:
+
+```python
+from unmarkd.unmarkers import BaseUnmarker
+class MyCustomUnmarker(BaseUnmarker):
+    def tag_some_tag(self, element) -> str:
+        for child in element.children:
+            if non_tag_output := self.handle_non_tags(child):
+                output += non_tag_output
+                continue
+            assert isinstance(element, bs4.Tag), type(element)
+            ...   # Do whatever you want with the child
+```
 
 ##### Utility functions when overriding
 
