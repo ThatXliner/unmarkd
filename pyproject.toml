@@ -2,7 +2,7 @@
 name = "unmarkd"
 description = "A markdown reverser"
 authors = ["Bryan Hu <bryan.hu.2020@gmail.com>"]
-version = "1.1.0"
+version = "1.1.1"
 
 readme = "README.md"
 license = "GPL-3.0-or-later"
