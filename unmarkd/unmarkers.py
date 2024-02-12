@@ -178,9 +178,6 @@ class BaseUnmarker(abc.ABC):
                 try:
                     output += self.resolve_handler_func(name)(child)
                 except AttributeError:
-                    if name.startswith("h"):  # XXX: Maybe H1, up to H6, is enough?
-                        output += "#" * int(name[1:]) + " " + self.__parse(child) + "\n"
-                        continue
                     output += self.handle_default(child)
             else:
                 output += self.parse_non_tags(child)
@@ -189,6 +186,21 @@ class BaseUnmarker(abc.ABC):
     def handle_default(self: "BaseUnmarker", child: bs4.PageElement) -> str:
         """Whenever a tag isn't handled by one of these methods, this is called."""
         return str(child)
+
+    # fmt: off
+    def tag_h1(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "# " + self.__parse(child) + "\n"
+    def tag_h2(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "## " + self.__parse(child) + "\n"
+    def tag_h3(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "### " + self.__parse(child) + "\n"
+    def tag_h4(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "#### " + self.__parse(child) + "\n"
+    def tag_h5(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "##### " + self.__parse(child) + "\n"
+    def tag_h6(self: "BaseUnmarker", child: bs4.Tag) → str:
+        return "###### " + self.__parse(child) + "\n"
+    # fmt: on
 
     def tag_div(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.__parse(child)
