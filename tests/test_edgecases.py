@@ -27,8 +27,6 @@ def test_custom_elements() -> None:
         == "<custom-element></custom-element>"
     )
 
-def test_header_tag() → None:
-    assert (
-        unmarkd.unmark("<header>yo</header>")
-        == "<header>yo</header>"
-    )
+
+def test_header_tag() -> None:
+    assert unmarkd.unmark("<header>yo</header>") == "<header>yo</header>"
