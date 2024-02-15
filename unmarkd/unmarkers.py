@@ -1,4 +1,5 @@
 """Generate markdown from messy HTML."""
+
 import abc
 import contextlib
 import html as lib_html
@@ -188,17 +189,17 @@ class BaseUnmarker(abc.ABC):
         return str(child)
 
     # fmt: off
-    def tag_h1(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h1(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "# " + self.__parse(child) + "\n"
-    def tag_h2(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h2(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "## " + self.__parse(child) + "\n"
-    def tag_h3(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h3(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "### " + self.__parse(child) + "\n"
-    def tag_h4(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h4(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "#### " + self.__parse(child) + "\n"
-    def tag_h5(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h5(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "##### " + self.__parse(child) + "\n"
-    def tag_h6(self: "BaseUnmarker", child: bs4.Tag) → str:
+    def tag_h6(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return "###### " + self.__parse(child) + "\n"
     # fmt: on
 
