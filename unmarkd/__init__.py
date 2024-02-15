@@ -1,4 +1,5 @@
 """A markdown reverser."""
+
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
@@ -12,4 +13,4 @@ def unmark(html: Union[str, "bs4.NavigableString", "bs4.BeautifulSoup"]) -> str:
     return unmarkers.BasicUnmarker().unmark(html)
 
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
