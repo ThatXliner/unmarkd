@@ -320,13 +320,29 @@ class BaseUnmarker(abc.ABC):
         """
         return ' "' + title.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
+    @staticmethod
+    def _format_destination(href: str) -> str:
+        r"""Format a link/image destination for the ``(...)`` part.
+
+        A bare destination can't contain spaces or unbalanced parentheses, so
+        wrap it in angle brackets (escaping ``<``/``>``) when it would otherwise
+        be ambiguous.
+        """
+        balanced = href.count("(") == href.count(")")
+        if " " in href or "\n" in href or not balanced or "<" in href or ">" in href:
+            inner = href.replace("\\", "\\\\").replace("<", "\\<").replace(">", "\\>")
+            return f"<{inner}>"
+        return href
+
     def tag_a(self: "BaseUnmarker", child: bs4.Tag) -> str:
         href = child.get("href")
         if href is None:
             # An <a> without href is raw inline HTML, not a markdown link.
             return self.handle_default(child)
         return (
-            f"[{self.__parse(child)}]({href}"
+            # Escape the link text so a literal "[" or "]" inside it doesn't
+            # break the [...] span on the round trip.
+            f"[{self.__parse(child, escape=True)}]({self._format_destination(href)}"
             + (
                 self._format_title(child["title"])  # type: ignore[arg-type]
                 if child.get("title")
@@ -341,7 +357,14 @@ class BaseUnmarker(abc.ABC):
             figcaption := parent.find("figcaption")
         ) is not None:
             img_text = figcaption.get_text()
-        return f"![{img.get('alt') or img_text}]({img['src']})"
+        src = img.get("src")
+        if src is None:
+            return self.handle_default(img)
+        title = self._format_title(img["title"]) if img.get("title") else ""
+        return (
+            f"![{img.get('alt') or img_text}]"
+            f"({self._format_destination(src)}{title})"
+        )
 
     def tag_ul(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self._render_list(child, self.UNORDERED_FORMAT)

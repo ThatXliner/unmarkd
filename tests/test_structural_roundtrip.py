@@ -309,6 +309,36 @@ class TestRawHtmlGuards:
         unmarkd.unmark(marko.convert("foo <![CDATA[>&<]]>"))
 
 
+class TestLinkEscaping:
+    """Link text with literal brackets, and destinations with spaces/unbalanced
+    parens, must be escaped or angle-wrapped."""
+
+    def test_bracket_in_link_text(self) -> None:
+        helper(r"[link \[bar](/uri)")
+
+    def test_close_bracket_in_link_text(self) -> None:
+        helper(r"[a \] b](/uri)")
+
+    def test_url_with_unbalanced_parens(self) -> None:
+        helper(r"[link](foo\(and\(bar\))")
+
+    def test_url_with_paren_and_colon(self) -> None:
+        helper(r"[link](foo\)\:)")
+
+    def test_plain_link(self) -> None:
+        helper("[plain](/uri)")
+
+
+class TestImageAttributes:
+    """Images keep their title; a destination needing angle brackets gets them."""
+
+    def test_image_with_title(self) -> None:
+        helper('![foo](/url "title")')
+
+    def test_image_without_title(self) -> None:
+        helper("![foo](/url)")
+
+
 class TestKnownLimitations:
     """Cases that cannot round-trip because BeautifulSoup's ``html.parser``
     discards information before unmarkd ever sees the tree."""
