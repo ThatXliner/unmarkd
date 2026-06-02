@@ -174,6 +174,28 @@ and the output:
     The end ...
 ````
 
+## Scope and limitations
+
+Unmarkd reverses HTML that has a Markdown equivalent — headings, emphasis,
+links, images, lists, blockquotes, code, and so on. For that core, it aims to
+be a deterministic, round-trip-safe CommonMark reverser (the test suite fuzzes
+`marko.convert(md) == marko.convert(unmark(marko.convert(md)))` over the
+official CommonMark spec examples).
+
+A few things are intentionally **out of scope**:
+
+- **Raw HTML blocks.** CommonMark passes embedded raw HTML (`<table>`, `<div>`,
+  stray tags, custom elements, etc.) through verbatim. Unmarkd is a Markdown
+  reverser, not an HTML normalizer: it converts what maps to Markdown and does
+  not promise to round-trip arbitrary raw HTML blocks byte-for-byte.
+- **Whitespace BeautifulSoup discards.** Unmarkd works on the parsed `bs4`
+  tree, so information the parser collapses before Unmarkd runs cannot be
+  recovered — for example, the exact run length of whitespace inside a `<code>`
+  span or the indentation inside a raw HTML block.
+
+If you need byte-exact HTML preservation, keep the original HTML; Unmarkd is for
+turning HTML *back into Markdown*, not for reproducing the HTML itself.
+
 ### Extending
 
 #### Brief Overview

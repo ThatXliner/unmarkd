@@ -13,7 +13,15 @@ SoupElement = Union[bs4.PageElement, bs4.BeautifulSoup]
 
 
 class BaseUnmarker(abc.ABC):
-    """To customize the behavior of your reverser, inherit from this abstract class."""
+    """To customize the behavior of your reverser, inherit from this abstract class.
+
+    Scope: Unmarkd reverses HTML that has a Markdown equivalent and aims to be a
+    deterministic, round-trip-safe CommonMark reverser for that core. Raw HTML
+    blocks (e.g. ``<table>``/``<div>``/custom elements) are out of scope and not
+    guaranteed to round-trip byte-for-byte, as is whitespace that BeautifulSoup
+    collapses before Unmarkd ever sees the tree (e.g. runs of spaces in a
+    ``<code>`` span). See the README "Scope and limitations" section.
+    """
 
     ESCAPABLES: Set[str] = {
         "*",
