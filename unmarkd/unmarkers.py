@@ -3,6 +3,7 @@
 import abc
 import contextlib
 import html as lib_html
+import re
 import textwrap
 from typing import Callable, Dict, Set, Union
 
@@ -79,9 +80,14 @@ class BaseUnmarker(abc.ABC):
             counter += 1
         return output.lstrip("\n")
 
+    #: Leading "<digits>." or "<digits>)" would start an ordered list, so the
+    #: delimiter is escaped when it appears at the very start of escaped text.
+    _ORDERED_MARKER = re.compile(r"^(\d+)([.)])")
+
     def escape(self: "BaseUnmarker", string: str) -> str:
         """Escape a string to be markdown-safe."""
-        return "".join(map(self.__escape_character, string))
+        escaped = "".join(map(self.__escape_character, string))
+        return self._ORDERED_MARKER.sub(r"\1\\\2", escaped)
 
     def __escape_character(self: "BaseUnmarker", char: str) -> str:
         """Escape a single character."""
@@ -153,7 +159,8 @@ class BaseUnmarker(abc.ABC):
     def handle_doctype(self: "BaseUnmarker", _: bs4.Doctype) -> str:
         return ""
 
-    def handle_cdata(self: "BaseUnmarker", _: bs4.CData) -> str:
+    def handle_c_data(self: "BaseUnmarker", _: bs4.CData) -> str:
+        # pascal_to_snake("CData") -> "c_data", so the handler must match.
         return ""
 
     def handle_declaration(self: "BaseUnmarker", _: bs4.Declaration) -> str:
@@ -259,7 +266,18 @@ class BaseUnmarker(abc.ABC):
         return f"\n```{self.detect_language(child)}\n{child.code.get_text()}```\n"
 
     def tag_code(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return f"`{self.__parse(child)}`"
+        # Code-span content is literal; never escape or re-render it. The fence
+        # must be a backtick run longer than any run inside the content, and the
+        # content is padded with a space when it would otherwise touch the fence.
+        content = child.get_text()
+        longest = max((len(m) for m in re.findall(r"`+", content)), default=0)
+        fence = "`" * (longest + 1)
+        if content and (content[0] == "`" or content[-1] == "`"):
+            content = f" {content} "
+        elif content.strip("`") == "" and content:
+            # All-backtick content also needs the surrounding spaces.
+            content = f" {content} "
+        return f"{fence}{content}{fence}"
 
     def tag_hr(self: "BaseUnmarker", _: bs4.BeautifulSoup) -> str:
         return "\n---\n"
@@ -303,8 +321,12 @@ class BaseUnmarker(abc.ABC):
         return ' "' + title.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     def tag_a(self: "BaseUnmarker", child: bs4.Tag) -> str:
+        href = child.get("href")
+        if href is None:
+            # An <a> without href is raw inline HTML, not a markdown link.
+            return self.handle_default(child)
         return (
-            f"[{self.__parse(child)}]({child['href']}"
+            f"[{self.__parse(child)}]({href}"
             + (
                 self._format_title(child["title"])  # type: ignore[arg-type]
                 if child.get("title")

@@ -267,6 +267,48 @@ class TestLinkTitles:
         helper("[x](https://x.com 'title')")
 
 
+class TestCodeSpanFencing:
+    """The backtick fence must be longer than any run inside the content, and
+    content touching the fence is padded (CommonMark code-span rules)."""
+
+    def test_content_with_single_backtick(self) -> None:
+        helper("`` foo ` bar ``")
+
+    def test_content_is_double_backtick(self) -> None:
+        helper("` `` `")
+
+    def test_backtick_run_in_content(self) -> None:
+        helper("``foo`bar``")
+
+    def test_plain_code_span(self) -> None:
+        helper("`code`")
+
+
+class TestOrderedMarkerEscaping:
+    """A leading "N." or "N)" is escaped so it doesn't start an ordered list."""
+
+    def test_escaped_period(self) -> None:
+        helper(r"1\. not a list")
+
+    def test_escaped_paren(self) -> None:
+        helper(r"99\) not a list")
+
+    def test_real_ordered_list(self) -> None:
+        helper("1. real list")
+
+
+class TestRawHtmlGuards:
+    """Raw inline HTML that looks tag-like must not crash the reverser. These do
+    not round-trip cleanly (unmarkd passes raw HTML through), but they must not
+    raise."""
+
+    def test_anchor_without_href(self) -> None:
+        unmarkd.unmark(marko.convert("<a><bab><c2c>"))
+
+    def test_cdata_block(self) -> None:
+        unmarkd.unmark(marko.convert("foo <![CDATA[>&<]]>"))
+
+
 class TestKnownLimitations:
     """Cases that cannot round-trip because BeautifulSoup's ``html.parser``
     discards information before unmarkd ever sees the tree."""
