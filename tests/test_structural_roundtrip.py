@@ -112,6 +112,12 @@ class TestHardBreaks:
     def test_hard_break_after_strong(self) -> None:
         helper("**x**  \ny")
 
+    def test_hard_break_after_literal_backslash(self) -> None:
+        helper("a\\\\  \nb")
+
+    def test_hard_break_after_link_and_backslash(self) -> None:
+        helper("[a](http://x.co) \\\\  \nb")
+
 
 class TestMultiParagraphItems:
     """A loose item may hold several paragraphs; later ones are indented
@@ -128,6 +134,15 @@ class TestMultiParagraphItems:
 
     def test_multi_paragraph_item_with_link(self) -> None:
         helper("- a\n\n  [l](https://x.com 't')")
+
+    def test_two_digit_ordinal_continuation(self) -> None:
+        # "10. " is four columns wide; the continuation must indent to match or
+        # it escapes the list.
+        helper("10. a\n\n    b")
+
+    def test_long_list_with_trailing_continuation(self) -> None:
+        items = "\n".join(f"{i}. x{i}" for i in range(1, 12))
+        helper(items + "\n\n    cont")
 
 
 class TestNestedEmphasis:
@@ -148,6 +163,74 @@ class TestNestedEmphasis:
 
     def test_strong_inside_em_with_text(self) -> None:
         helper("*a **b** c*")
+
+    def test_three_levels_deep(self) -> None:
+        helper("**_*x*_**")
+
+
+class TestListItemEscaping:
+    """A literal block-starter character at the start of a list item must stay
+    escaped, or it reparses as a heading/blockquote/nested bullet."""
+
+    def test_escaped_hash(self) -> None:
+        helper(r"- \# x")
+
+    def test_escaped_gt(self) -> None:
+        helper(r"- \> x")
+
+    def test_escaped_dash(self) -> None:
+        helper(r"- \- x")
+
+    def test_escaped_star_midtext(self) -> None:
+        helper(r"- a \* b")
+
+    def test_literal_hash_unescaped(self) -> None:
+        helper("- # x")
+
+
+class TestHeadingEscaping:
+    """Heading text is escaped so a literal backtick/special doesn't pair with
+    a later delimiter and corrupt the round trip."""
+
+    def test_escaped_backtick(self) -> None:
+        helper(r"# \` x")
+
+    def test_escaped_hash(self) -> None:
+        helper(r"# \# x")
+
+    def test_escaped_bracket(self) -> None:
+        helper(r"## \[ x")
+
+    def test_heading_with_emphasis(self) -> None:
+        helper("# **bold**")
+
+    def test_literal_special_after_code_span(self) -> None:
+        # The <code> child must not leave the escaping flag flipped for the
+        # following literal backtick.
+        helper(r"# `a` \` `b`")
+
+    def test_literal_star_after_strong(self) -> None:
+        helper(r"# **b** \* c")
+
+
+class TestBlockquotePrefix:
+    """Every line of a multi-line blockquote keeps its marker; quoted content
+    is escaped so it does not leak out as a sibling block."""
+
+    def test_multiline_plain(self) -> None:
+        helper("> a\n> b\n> c")
+
+    def test_multiline_with_emphasis(self) -> None:
+        helper("> a\n> **b**")
+
+    def test_escaped_hash_in_quote(self) -> None:
+        helper(r"> \# x")
+
+    def test_nested_markers(self) -> None:
+        helper(">>")
+
+    def test_triple_nested_markers(self) -> None:
+        helper(">>>")
 
 
 class TestLinkTitles:

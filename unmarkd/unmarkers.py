@@ -30,6 +30,9 @@ class BaseUnmarker(abc.ABC):
     DEFAULT_TAG_ALIASES: Dict[str, str] = {"em": "i", "strong": "b", "s": "del"}
     UNORDERED_FORMAT: str = "\n- {next_item}"
     ORDERED_FORMAT: str = "\n{number_index}. {next_item}"
+    #: Indentation for continuation paragraphs in the current list item; set by
+    #: _render_list to match the marker width.
+    _li_indent: str = "  "
 
     # def parse_css(self: "BaseUnmarker", css: str) -> Dict[str, str]:
 
@@ -65,6 +68,10 @@ class BaseUnmarker(abc.ABC):
             if not isinstance(child, bs4.Tag):
                 # Empty/whitespace string between <li> elements; skip it.
                 continue
+            # Continuation paragraphs inside the item indent to the width of the
+            # marker ("- " is 2, "10. " is 4), so they stay part of the item.
+            marker = item_format.format(next_item="", number_index=counter).strip("\n")
+            self._li_indent = " " * len(marker)
             output += item_format.format(
                 next_item=self.tag_li(child).rstrip(),
                 number_index=counter,
@@ -205,7 +212,6 @@ class BaseUnmarker(abc.ABC):
         escape: bool = False,
     ) -> str:
         """Parse an HTML element into valid markdown."""
-        self._should_escape = escape  # for handle_string
         output = ""
         if html is None:
             return ""
@@ -213,6 +219,10 @@ class BaseUnmarker(abc.ABC):
             if isinstance(child, bs4.Tag):
                 output += self.handle_tag(child)
             else:
+                # Re-assert the escaping mode for every text node: a nested tag
+                # (e.g. <code>, <a>) runs its own __parse and would otherwise
+                # leave the flag flipped for the following siblings.
+                self._should_escape = escape
                 output += self.parse_non_tags(child)
         return output
 
@@ -222,17 +232,17 @@ class BaseUnmarker(abc.ABC):
 
     # fmt: off
     def tag_h1(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "# " + self.__parse(child) + "\n"
+        return "# " + self.__parse(child, escape=True) + "\n"
     def tag_h2(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "## " + self.__parse(child) + "\n"
+        return "## " + self.__parse(child, escape=True) + "\n"
     def tag_h3(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "### " + self.__parse(child) + "\n"
+        return "### " + self.__parse(child, escape=True) + "\n"
     def tag_h4(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "#### " + self.__parse(child) + "\n"
+        return "#### " + self.__parse(child, escape=True) + "\n"
     def tag_h5(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "##### " + self.__parse(child) + "\n"
+        return "##### " + self.__parse(child, escape=True) + "\n"
     def tag_h6(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return "###### " + self.__parse(child) + "\n"
+        return "###### " + self.__parse(child, escape=True) + "\n"
     # fmt: on
 
     def tag_div(self: "BaseUnmarker", child: bs4.Tag) -> str:
@@ -262,13 +272,18 @@ class BaseUnmarker(abc.ABC):
     _EMPHASIS_TAGS = frozenset({"b", "strong", "i", "em"})
 
     def _emphasis_alternates(self: "BaseUnmarker", child: bs4.Tag) -> bool:
-        """Report whether an emphasis tag is nested directly in another.
+        """Report whether an emphasis tag should use the alternate delimiter.
 
-        When it is, the inner one switches to the underscore delimiter so the
-        ``strong``/``em`` order stays unambiguous (``***`` is not).
+        Same-character emphasis delimiters collapse when nested (``***`` is
+        ambiguous), so we alternate ``*``/``_`` by emphasis nesting depth: every
+        emphasis ancestor flips the delimiter, keeping each boundary distinct.
         """
+        depth = 0
         parent = child.parent
-        return parent is not None and parent.name in self._EMPHASIS_TAGS
+        while parent is not None and parent.name in self._EMPHASIS_TAGS:
+            depth += 1
+            parent = parent.parent
+        return depth % 2 == 1
 
     def tag_b(self: "BaseUnmarker", child: bs4.Tag) -> str:
         delim = "__" if self._emphasis_alternates(child) else "**"
@@ -319,6 +334,10 @@ class BaseUnmarker(abc.ABC):
     def tag_li(self: "BaseUnmarker", child: bs4.Tag) -> str:
         output = ""
         for element in child.children:
+            # Direct text in a list item must be escaped like paragraph text, so
+            # a literal "#"/">"/"-" at the start doesn't turn into a heading,
+            # blockquote, or nested bullet on the round trip.
+            self._should_escape = True
             non_tag_output = self.parse_non_tags(element)
             if non_tag_output:
                 if non_tag_output.strip() == "":
@@ -345,14 +364,12 @@ class BaseUnmarker(abc.ABC):
             elif element.name == "p" and output.strip():
                 # A loose item holds multiple <p> blocks. The first becomes the
                 # item text; later ones are continuation paragraphs, separated by
-                # a blank line and indented to line up under the marker (two
-                # spaces for "- ", three for an ordered "N. ").
-                parent = child.parent
-                indent = "   " if parent is not None and parent.name == "ol" else "  "
+                # a blank line and indented to line up under the marker (set by
+                # _render_list, e.g. "  " for "- ", "    " for "10. ").
                 output = (
                     output.rstrip()
                     + "\n\n"
-                    + textwrap.indent(self.handle_tag(element), indent)
+                    + textwrap.indent(self.handle_tag(element), self._li_indent)
                 )
             else:
                 output += self.handle_tag(element)
@@ -360,16 +377,26 @@ class BaseUnmarker(abc.ABC):
 
     def tag_br(self: "BaseUnmarker", br: bs4.Tag) -> str:
         # A <br /> is a hard line break within a block, not a paragraph break.
-        # The backslash form is unambiguous (unlike trailing whitespace). When
-        # the HTML already has a newline after the tag, let that supply the
-        # break; otherwise add one here.
+        # The backslash form collides when the preceding text ends in a
+        # backslash, so fall back to the two-space form in that case.
+        previous = br.previous_sibling
+        prefix = "\\"
+        if isinstance(previous, bs4.NavigableString) and str(previous).endswith("\\"):
+            prefix = "  "
         sibling = br.next_sibling
         if isinstance(sibling, bs4.NavigableString) and str(sibling).startswith("\n"):
-            return "\\"
-        return "\\\n"
+            return prefix
+        return prefix + "\n"
 
     def tag_blockquote(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return ">" + self.__parse(child).strip() + "\n"
+        # Every line of quoted content needs its own "> " marker, and the text
+        # is escaped so a literal block starter inside the quote doesn't reparse
+        # as a new block once the markers are stripped.
+        inner = self.__parse(child, escape=True).strip()
+        quoted = "\n".join(
+            f"> {line}" if line else ">" for line in inner.split("\n")
+        )
+        return quoted + "\n"
 
     def tag_q(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with='"')
