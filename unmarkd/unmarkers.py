@@ -257,11 +257,26 @@ class BaseUnmarker(abc.ABC):
     def tag_td(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.__parse(child, escape=True)
 
+    #: Tags that produce emphasis; nesting two of them with the same delimiter
+    #: character (``***``) is ambiguous, so we alternate by depth.
+    _EMPHASIS_TAGS = frozenset({"b", "strong", "i", "em"})
+
+    def _emphasis_alternates(self: "BaseUnmarker", child: bs4.Tag) -> bool:
+        """Report whether an emphasis tag is nested directly in another.
+
+        When it is, the inner one switches to the underscore delimiter so the
+        ``strong``/``em`` order stays unambiguous (``***`` is not).
+        """
+        parent = child.parent
+        return parent is not None and parent.name in self._EMPHASIS_TAGS
+
     def tag_b(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return self.wrap(child, around_with="**")
+        delim = "__" if self._emphasis_alternates(child) else "**"
+        return self.wrap(child, around_with=delim)
 
     def tag_i(self: "BaseUnmarker", child: bs4.Tag) -> str:
-        return self.wrap(child, around_with="*")
+        delim = "_" if self._emphasis_alternates(child) else "*"
+        return self.wrap(child, around_with=delim)
 
     @staticmethod
     def _format_title(title: str) -> str:
@@ -327,12 +342,31 @@ class BaseUnmarker(abc.ABC):
                     self.handle_tag(element),
                     "    ",
                 )
+            elif element.name == "p" and output.strip():
+                # A loose item holds multiple <p> blocks. The first becomes the
+                # item text; later ones are continuation paragraphs, separated by
+                # a blank line and indented to line up under the marker (two
+                # spaces for "- ", three for an ordered "N. ").
+                parent = child.parent
+                indent = "   " if parent is not None and parent.name == "ol" else "  "
+                output = (
+                    output.rstrip()
+                    + "\n\n"
+                    + textwrap.indent(self.handle_tag(element), indent)
+                )
             else:
                 output += self.handle_tag(element)
         return output.strip()
 
-    def tag_br(self: "BaseUnmarker", _: bs4.BeautifulSoup) -> str:
-        return "\n\n"
+    def tag_br(self: "BaseUnmarker", br: bs4.Tag) -> str:
+        # A <br /> is a hard line break within a block, not a paragraph break.
+        # The backslash form is unambiguous (unlike trailing whitespace). When
+        # the HTML already has a newline after the tag, let that supply the
+        # break; otherwise add one here.
+        sibling = br.next_sibling
+        if isinstance(sibling, bs4.NavigableString) and str(sibling).startswith("\n"):
+            return "\\"
+        return "\\\n"
 
     def tag_blockquote(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return ">" + self.__parse(child).strip() + "\n"

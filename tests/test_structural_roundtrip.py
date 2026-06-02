@@ -97,6 +97,59 @@ class TestSoftBreaks:
         helper("a\n\n# h\n\nb")
 
 
+class TestHardBreaks:
+    """A ``<br />`` is a hard line break within a block, not a paragraph break."""
+
+    def test_hard_break(self) -> None:
+        helper("a  \nb")
+
+    def test_hard_break_twice(self) -> None:
+        helper("a  \nb  \nc")
+
+    def test_hard_break_after_emphasis(self) -> None:
+        helper("*x*  \ny")
+
+    def test_hard_break_after_strong(self) -> None:
+        helper("**x**  \ny")
+
+
+class TestMultiParagraphItems:
+    """A loose item may hold several paragraphs; later ones are indented
+    continuation paragraphs."""
+
+    def test_two_paragraph_item(self) -> None:
+        helper("- a\n\n  b")
+
+    def test_three_paragraph_item(self) -> None:
+        helper("- a\n\n  b\n\n  c")
+
+    def test_ordered_two_paragraph_item(self) -> None:
+        helper("1. a\n\n   b")
+
+    def test_multi_paragraph_item_with_link(self) -> None:
+        helper("- a\n\n  [l](https://x.com 't')")
+
+
+class TestNestedEmphasis:
+    """``***`` is ambiguous; nested emphasis must alternate delimiters so the
+    strong/em order survives the round trip."""
+
+    def test_strong_over_em(self) -> None:
+        helper("**_x_**")
+
+    def test_em_over_strong(self) -> None:
+        helper("_**x**_")
+
+    def test_triple(self) -> None:
+        helper("***x***")
+
+    def test_em_inside_strong_with_text(self) -> None:
+        helper("**a _b_ c**")
+
+    def test_strong_inside_em_with_text(self) -> None:
+        helper("*a **b** c*")
+
+
 class TestLinkTitles:
     """Titles with non-ASCII used to be mangled by ``repr()``."""
 
