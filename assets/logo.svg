@@ -1,0 +1,21 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Unmarkd logo">
+  <title>Unmarkd</title>
+  <defs>
+    <linearGradient id="umd-bg" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="url(#umd-bg)"/>
+  <!-- two reversing arrows (the 🔄 motif): HTML on top, Markdown on bottom -->
+  <g fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 84 A44 44 0 0 1 142 76"/>
+    <path d="M142 116 A44 44 0 0 1 58 124"/>
+  </g>
+  <polygon points="142,58 158,80 130,84" fill="#ffffff"/>
+  <polygon points="58,142 42,120 70,116" fill="#ffffff"/>
+  <!-- top: HTML angle brackets </> -->
+  <text x="100" y="74" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="30" font-weight="700" fill="#ffffff" text-anchor="middle">&lt;/&gt;</text>
+  <!-- bottom: Markdown hashes -->
+  <text x="100" y="150" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="34" font-weight="700" fill="#ffffff" text-anchor="middle"># #</text>
+</svg>
