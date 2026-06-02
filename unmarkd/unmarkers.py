@@ -43,6 +43,17 @@ class BaseUnmarker(abc.ABC):
 
         Made to reduce code duplication.
         """
+        # A "loose" list (blank lines between items) renders each <li>'s
+        # content inside a <p>; mirror that by separating items with a blank
+        # line so the markdown round-trips back to a loose list.
+        if any(
+            isinstance(li, bs4.Tag)
+            and li.name == "li"
+            and li.find("p", recursive=False)
+            for li in element.children
+        ):
+            item_format = "\n" + item_format
+
         output = ""
         counter = counter_initial_value
         for child in element.children:
@@ -51,7 +62,9 @@ class BaseUnmarker(abc.ABC):
                     continue
                 output += non_tag_output
                 continue
-            assert isinstance(child, bs4.Tag), type(element)
+            if not isinstance(child, bs4.Tag):
+                # Empty/whitespace string between <li> elements; skip it.
+                continue
             output += item_format.format(
                 next_item=self.tag_li(child).rstrip(),
                 number_index=counter,
@@ -93,7 +106,15 @@ class BaseUnmarker(abc.ABC):
         return around_with + self.__parse(element, escape=True) + around_with
 
     def handle_tag(self: "BaseUnmarker", tag: bs4.Tag) -> str:
-        return self.resolve_handler_func(tag.name)(tag)
+        name = (
+            self.DEFAULT_TAG_ALIASES.get(tag.name)
+            or self.TAG_ALIASES.get(tag.name)
+            or tag.name
+        )
+        try:
+            return self.resolve_handler_func(name)(tag)
+        except AttributeError:
+            return self.handle_default(tag)
 
     def resolve_handler_func(
         self: "BaseUnmarker",
@@ -101,10 +122,26 @@ class BaseUnmarker(abc.ABC):
     ) -> Callable[[bs4.Tag], str]:
         return getattr(self, "tag_" + name)  # type: ignore[no-any-return]
 
+    #: Tags that introduce their own block; a bare newline beside one separates
+    #: blocks (``\n\n``) rather than acting as an inline soft break (``\n``).
+    BLOCK_TAGS: Set[str] = {
+        "p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li",
+        "blockquote", "pre", "hr", "table", "header", "footer", "section",
+        "article",
+    }
+
     def handle_string(self: "BaseUnmarker", string: str) -> str:
         if string == "\n":
-            return "\n\n"
+            # A bare newline between inline elements is a CommonMark soft break
+            # (stays in the same block); between block elements it separates them.
+            return "\n"
         return self.escape(string) if self._should_escape else string
+
+    def _is_block_boundary(self: "BaseUnmarker", node: bs4.PageElement) -> bool:
+        for neighbor in (node.previous_sibling, node.next_sibling):
+            if isinstance(neighbor, bs4.Tag) and neighbor.name in self.BLOCK_TAGS:
+                return True
+        return False
 
     def handle_doctype(self: "BaseUnmarker", _: bs4.Doctype) -> str:
         return ""
@@ -153,6 +190,12 @@ class BaseUnmarker(abc.ABC):
                 msg = "This should never happen"
                 raise AssertionError(msg, type(child)) from error
         if isinstance(child, (str, bs4.NavigableString)):
+            if (
+                child == "\n"
+                and isinstance(child, bs4.NavigableString)
+                and self._is_block_boundary(child)
+            ):
+                return "\n\n"
             return self.handle_string(child)
         return ""  # To indicate that it is a tag
 
@@ -168,18 +211,7 @@ class BaseUnmarker(abc.ABC):
             return ""
         for child in html.children:  # type: ignore[union-attr]
             if isinstance(child, bs4.Tag):
-                name: str = child.name
-                # To reduce code duplication
-                name = (
-                    self.DEFAULT_TAG_ALIASES.get(name)
-                    or self.TAG_ALIASES.get(name)
-                    or name
-                )
-
-                try:
-                    output += self.resolve_handler_func(name)(child)
-                except AttributeError:
-                    output += self.handle_default(child)
+                output += self.handle_tag(child)
             else:
                 output += self.parse_non_tags(child)
         return output
@@ -231,11 +263,20 @@ class BaseUnmarker(abc.ABC):
     def tag_i(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return self.wrap(child, around_with="*")
 
+    @staticmethod
+    def _format_title(title: str) -> str:
+        r"""Quote a link/image title for CommonMark: ` "title"`.
+
+        Only the quote char and backslash need escaping; using repr() here
+        would mangle non-ASCII characters (e.g. ``\xa0``) into escape codes.
+        """
+        return ' "' + title.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
     def tag_a(self: "BaseUnmarker", child: bs4.Tag) -> str:
         return (
             f"[{self.__parse(child)}]({child['href']}"
             + (
-                " " + repr(self.escape(child["title"]))  # type: ignore[arg-type]
+                self._format_title(child["title"])  # type: ignore[arg-type]
                 if child.get("title")
                 else ""
             )
@@ -263,18 +304,32 @@ class BaseUnmarker(abc.ABC):
     def tag_li(self: "BaseUnmarker", child: bs4.Tag) -> str:
         output = ""
         for element in child.children:
-            if (non_tag_output := self.parse_non_tags(element)).strip() != "":
-                output += non_tag_output
+            non_tag_output = self.parse_non_tags(element)
+            if non_tag_output:
+                if non_tag_output.strip() == "":
+                    # Whitespace between inline elements is significant; collapse
+                    # it to a single space. But whitespace next to a nested list
+                    # is just HTML indentation — the list supplies its own break.
+                    sibling = element.next_sibling
+                    if not (
+                        isinstance(sibling, bs4.Tag) and sibling.name in ("ol", "ul")
+                    ):
+                        output += " "
+                else:
+                    output += non_tag_output
                 continue
-            assert isinstance(element, bs4.Tag), type(element)
+            if not isinstance(element, bs4.Tag):
+                continue
             if element.name in ("ol", "ul"):
-                output += textwrap.indent(
+                # A nested list must start on its own line, indented under the
+                # parent item.
+                output = output.rstrip() + "\n" + textwrap.indent(
                     self.handle_tag(element),
                     "    ",
                 )
             else:
                 output += self.handle_tag(element)
-        return output
+        return output.strip()
 
     def tag_br(self: "BaseUnmarker", _: bs4.BeautifulSoup) -> str:
         return "\n\n"
