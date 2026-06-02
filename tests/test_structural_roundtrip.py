@@ -5,6 +5,7 @@ Each case is a CommonMark construct that previously failed to round-trip
 Found via grammar-aware fuzzing; locked in here so they never regress.
 """
 import marko
+import pytest
 
 import unmarkd
 
@@ -58,6 +59,26 @@ class TestLooseLists:
 
     def test_tight_ul_unchanged(self) -> None:
         helper("- a\n- b")
+
+
+class TestListItemBlocks:
+    """Block children of a list item (code fences, blockquotes) must indent to
+    the marker width so they stay inside the item."""
+
+    def test_code_fence_in_item(self) -> None:
+        helper("- ```\n  code\n  ```")
+
+    def test_code_fence_in_ordered_item(self) -> None:
+        helper("1. ```\n   code\n   ```")
+
+    def test_paragraph_then_code_fence(self) -> None:
+        helper("- text\n\n  ```\n  code\n  ```")
+
+    def test_two_digit_ordinal_code_fence(self) -> None:
+        helper("10. ```\n    code\n    ```")
+
+    def test_blockquote_in_item(self) -> None:
+        helper("- > q")
 
 
 class TestNestedLists:
@@ -244,3 +265,16 @@ class TestLinkTitles:
 
     def test_plain_title(self) -> None:
         helper("[x](https://x.com 'title')")
+
+
+class TestKnownLimitations:
+    """Cases that cannot round-trip because BeautifulSoup's ``html.parser``
+    discards information before unmarkd ever sees the tree."""
+
+    @pytest.mark.xfail(
+        reason="html.parser collapses runs of whitespace inside <code>, so a "
+        "code span of only spaces loses its length before unmarkd runs.",
+        strict=True,
+    )
+    def test_whitespace_only_code_span(self) -> None:
+        helper("`  `")

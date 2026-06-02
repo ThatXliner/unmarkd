@@ -371,6 +371,16 @@ class BaseUnmarker(abc.ABC):
                     + "\n\n"
                     + textwrap.indent(self.handle_tag(element), self._li_indent)
                 )
+            elif element.name == "pre":
+                # A fenced code block inside an item must be indented to the
+                # marker width, or it dedents and breaks out of the list.
+                block = textwrap.indent(
+                    self.handle_tag(element).strip("\n"),
+                    self._li_indent,
+                )
+                output = (
+                    (output.rstrip() + "\n\n" + block) if output.strip() else block
+                )
             else:
                 output += self.handle_tag(element)
         return output.strip()
