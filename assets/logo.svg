@@ -7,15 +7,11 @@
     </linearGradient>
   </defs>
   <rect width="200" height="200" rx="44" fill="url(#umd-bg)"/>
-  <!-- two reversing arrows (the 🔄 motif): HTML on top, Markdown on bottom -->
-  <g fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M58 84 A44 44 0 0 1 142 76"/>
-    <path d="M142 116 A44 44 0 0 1 58 124"/>
+  <!-- mirrored M: markdown, reversed -->
+  <path d="M54 156 V76 L100 120 L146 76 V156" fill="none" stroke="#ffffff" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- reverse arrow (right to left) -->
+  <g stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M146 48 H72"/>
+    <path d="M92 30 L70 48 L92 66"/>
   </g>
-  <polygon points="142,58 158,80 130,84" fill="#ffffff"/>
-  <polygon points="58,142 42,120 70,116" fill="#ffffff"/>
-  <!-- top: HTML angle brackets </> -->
-  <text x="100" y="74" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="30" font-weight="700" fill="#ffffff" text-anchor="middle">&lt;/&gt;</text>
-  <!-- bottom: Markdown hashes -->
-  <text x="100" y="150" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="34" font-weight="700" fill="#ffffff" text-anchor="middle"># #</text>
 </svg>

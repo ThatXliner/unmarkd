@@ -1,14 +1,11 @@
 <svg width="760" height="200" viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Unmarkd banner">
   <title>Unmarkd — A markdown reverser · HTML → Markdown</title>
   <g transform="translate(0,0)">
-    <g fill="none" stroke="#0EA5E9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M58 84 A44 44 0 0 1 142 76"/>
-      <path d="M142 116 A44 44 0 0 1 58 124"/>
+    <path d="M54 156 V76 L100 120 L146 76 V156" fill="none" stroke="#0EA5E9" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <g stroke="#0EA5E9" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M146 48 H72"/>
+      <path d="M92 30 L70 48 L92 66"/>
     </g>
-    <polygon points="142,58 158,80 130,84" fill="#0EA5E9"/>
-    <polygon points="58,142 42,120 70,116" fill="#0EA5E9"/>
-    <text x="100" y="74" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="28" font-weight="700" fill="#E2E8F0" text-anchor="middle">&lt;/&gt;</text>
-    <text x="100" y="150" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="32" font-weight="700" fill="#E2E8F0" text-anchor="middle"># #</text>
   </g>
   <text x="224" y="98" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="58" font-weight="800" fill="#F1F5F9">Unmarkd</text>
   <text x="227" y="134" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="22" font-weight="500" fill="#94A3B8">A markdown reverser · HTML → Markdown</text>
